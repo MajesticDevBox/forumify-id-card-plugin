@@ -1,0 +1,11 @@
+{% extends '@ForumifyIdCardPlugin/admin/base.html.twig' %}
+{% block card_body %}
+<div class="id-detail"><section class="id-preview">{% include '@ForumifyIdCardPlugin/card.html.twig' %}</section><section class="id-panel"><span class="id-status {{ data.status }}">{{ data.status|upper }}</span><h2>{{ card.displayName }}</h2><p>Member ID {{ card.memberId }} · {{ card.source|upper }}</p><div class="id-actions">
+{% if is_granted('id-cards.admin.id_cards.manage') %}<a href="{{ path('id_cards_edit', {id:card.id}) }}">Edit card</a>{% endif %}
+{% if is_granted('id-cards.admin.id_cards.download') %}<a class="id-primary" href="{{ path('id_cards_download', {id:card.id}) }}">Download PNG</a>{% endif %}
+<a href="{{ data.verificationUrl }}" rel="noreferrer">Public verification</a></div>
+{% if card.source in ['milhq', 'commandnet'] and is_granted('id-cards.admin.id_cards.manage') %}<form method="post" action="{{ path('id_cards_sync', {id:card.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('card_' ~ card.id) }}"><button>Sync Now</button></form>{% endif %}
+{% if card.status != 'revoked' and is_granted('id-cards.admin.id_cards.revoke') %}<details><summary>Revoke card</summary><form method="post" action="{{ path('id_cards_revoke', {id:card.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('card_' ~ card.id) }}"><label>Reason<input name="reason" maxlength="500"></label><label><input type="checkbox" name="confirm" value="yes" required>Confirm revocation. The QR will immediately show revoked.</label><button>Revoke card</button></form></details>{% endif %}
+{% if is_granted('id-cards.admin.id_cards.delete') %}<details><summary>Delete card permanently</summary><form method="post" action="{{ path('id_cards_delete', {id:card.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('card_' ~ card.id) }}"><label><input type="checkbox" name="confirm" value="yes" required>Confirm deletion. Verification will return not found.</label><button>Delete card</button></form></details>{% endif %}
+</section></div>
+{% endblock %}

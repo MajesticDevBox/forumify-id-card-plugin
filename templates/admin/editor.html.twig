@@ -1,0 +1,21 @@
+{% extends '@ForumifyIdCardPlugin/admin/base.html.twig' %}
+{% block card_body %}
+<div class="id-editor" data-card-editor data-years="{{ years }}" data-id-url="{{ path('id_cards_new_id') }}" data-milhq-search-url="{{ path('id_cards_soldiers') }}" data-milhq-resolve-url="{{ path('id_cards_soldier', {id: 1}) }}"{% if commandNetAvailable %} data-commandnet-search-url="{{ path('id_cards_commandnet_search') }}" data-commandnet-resolve-url="{{ path('id_cards_commandnet_soldier', {id: 1}) }}"{% endif %} data-token="{{ csrf_token('id_card_editor') }}">
+    <section class="id-panel"><div class="id-section-title"><span>01 / PERSONNEL</span><h2>{{ card.id ? 'Edit identification' : 'Create identification' }}</h2></div>
+    {% if not milhqAvailable and not commandNetAvailable %}<p class="id-notice">No personnel integration is available. Manual cards are fully supported.</p>{% endif %}
+    {{ form_start(form) }}{{ form_errors(form) }}
+    {{ form_row(form.source) }}
+    <div data-soldier-search><label data-soldier-search-label for="soldier-query">Search personnel</label><input id="soldier-query" type="search" placeholder="Search by name…" autocomplete="off"><div data-soldier-results></div><button type="button" data-import>Sync from personnel record</button><p data-import-message role="status"></p></div>
+    {{ form_row(form.milhqSoldierId) }}{% if commandNetAvailable %}{{ form_row(form.commandNetSoldierId) }}{% endif %}{{ form_row(form.displayName) }}
+    <div class="id-member">{{ form_row(form.memberId) }}<button type="button" data-regenerate>Regenerate</button></div>
+    {% if card.id %}{{ form_row(form.confirmMemberIdChange) }}{% else %}{% do form.confirmMemberIdChange.setRendered %}{% endif %}
+    {{ form_row(form.organizationLine1) }}{{ form_row(form.organizationLine2) }}{{ form_row(form.organizationLine3) }}
+    <details open><summary>Portrait & dates</summary>{{ form_row(form.photoPreference) }}{{ form_row(form.upload) }}<p class="id-muted">JPEG, PNG or WebP · up to 5 MB · centered crop</p>{{ form_row(form.issueDate) }}{{ form_row(form.expirationOverride) }}{{ form_row(form.expirationDate) }}</details>
+    <details><summary>Synchronization & private notes</summary>{{ form_row(form.autoSyncMilhq) }}{% if commandNetAvailable %}{{ form_row(form.autoSyncCommandNet) }}{% endif %}{{ form_row(form.syncName) }}{{ form_row(form.syncOrganization) }}{{ form_row(form.syncPhoto) }}{{ form_row(form.syncStatus) }}{{ form_row(form.notes) }}</details>
+    <div class="id-actions"><button class="id-primary" type="submit">{{ card.id ? 'Save changes' : 'Issue card' }}</button><button type="reset">Reset</button></div>
+    {{ form_end(form) }}</section>
+    <aside class="id-preview"><div class="id-section-title"><span>02 / LIVE PREVIEW</span><h2>Your member card</h2></div>
+    {% include '@ForumifyIdCardPlugin/card.html.twig' %}
+    <p class="id-muted">QR verification becomes available after saving. Download the issued card from its detail page.</p><p data-card-message role="status"></p></aside>
+</div>
+{% endblock %}
