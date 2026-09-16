@@ -4,11 +4,12 @@
 
 - PHP 8.4.25, Composer stable dependency resolution: Forumify 1.2.3, Endroid QR Code 6.1.3. MILHQ is not a mandatory dependency.
 - `composer validate --strict`: valid.
-- PHPUnit: **13 tests, 148 assertions passed**, including domain and Symfony HTTP integration tests.
-- SQLite migration creates both tables; Doctrine reports no schema differences.
+- PHPUnit: **20 tests, 172 assertions passed**, including domain and Symfony HTTP integration tests. Originally 13 tests/148 assertions covering the manual/MILHQ path only; extended to cover the Command Net personnel source added afterward.
+- SQLite migration test now applies both the original and the Command Net migration to the same schema before comparing against the entity mapping, so a future column drift on either one would fail the test rather than being asserted against a stale baseline.
 - Manual create → public verification → revoke → public REVOKED state, with private notes excluded.
 - Unknown verification token returns 404; anonymous administration is rejected; invalid CSRF is rejected.
 - Six-digit leading-zero IDs, collision retry selection, leap-year calculations, revocation precedence, optional MILHQ absence, selective sync preservation and mapped organization lines.
+- Command Net: optional-absence contract, unit-name fallback with no mapping table and no warning ever set (unlike MILHQ), discharge-only terminal status, sync preserving owned fields, sync as a no-op for other sources, the two admin routes' authorization (`/admin/id-cards/commandnet/search`, `/admin/id-cards/create-from-commandnet/{id}`) including the unavailable-record 404 path.
 - Browser Chrome: editable name, regenerate ID, synthetic portrait upload and preview, leap-day calculation, manual save, export download, verification link.
 - Export: 1200×756 PNG; QR independently decoded using jsQR and resolved to the correct member verification page.
 - Desktop 1440px and mobile 390px inspected; no mobile horizontal overflow. Browser run recorded no page JavaScript errors.

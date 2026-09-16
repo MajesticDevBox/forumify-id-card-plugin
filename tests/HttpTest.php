@@ -36,9 +36,28 @@ class HttpTest extends WebTestCase
     public function testUnauthorizedAdminRequestsAreDenied(): void
     {
         $client=static::createClient();
-        foreach (['/admin/id-cards','/admin/id-cards/create','/admin/id-cards/settings','/admin/id-cards/unit-mapping','/admin/id-cards/milhq/search'] as $path) {
+        foreach (['/admin/id-cards','/admin/id-cards/create','/admin/id-cards/settings','/admin/id-cards/unit-mapping','/admin/id-cards/milhq/search','/admin/id-cards/commandnet/search','/admin/id-cards/create-from-commandnet/1'] as $path) {
             $client->request('GET',$path);self::assertResponseStatusCodeSame(401);
         }
+    }
+
+    public function testCommandNetSearchReportsUnavailableWhenNotInstalled(): void
+    {
+        $client=static::createClient();$client->loginUser(new InMemoryUser('admin','unused',['ROLE_ADMIN']));
+        $client->request('GET','/admin/id-cards/commandnet/search',['q'=>'test']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['available'=>false,'soldiers'=>[]],json_decode($client->getResponse()->getContent(),true));
+    }
+
+    public function testCreateFromCommandNetIs404WhenUnavailableAndDeniedWithoutPermission(): void
+    {
+        $client=static::createClient();$client->loginUser(new InMemoryUser('admin','unused',['ROLE_ADMIN']));
+        $client->request('GET','/admin/id-cards/create-from-commandnet/1');
+        self::assertResponseStatusCodeSame(404);
+
+        $client->loginUser(new InMemoryUser('viewer','unused',['ROLE_USER']));
+        $client->request('GET','/admin/id-cards/create-from-commandnet/1');
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testCsrfRejectsRegenerate(): void
