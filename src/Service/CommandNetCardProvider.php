@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace MajesticDev\ForumifyIdCard\Service;
 
-use Doctrine\Persistence\ManagerRegistry;
 use MajesticDev\ForumifyIdCard\DTO\CardData;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
 
 /**
  * A second, optional personnel source alongside MilhqCardProvider, for communities running
@@ -15,15 +13,18 @@ use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
  * Doctrine manager both have to be true before anything here touches the database, so this
  * is fully inert - and never rendered anywhere - on an install that doesn't have it.
  */
-class CommandNetCardProvider
+class CommandNetCardProvider extends AbstractCardProvider
 {
     private const SOLDIER = 'MajesticDev\\CommandNet\\Entity\\SoldierProfile';
 
-    public function __construct(private readonly ManagerRegistry $registry, private readonly CardSettings $settings) {}
-
-    public function isAvailable(): bool
+    protected function soldierEntityClass(): string
     {
-        return class_exists(self::SOLDIER) && $this->registry->getManagerForClass(self::SOLDIER) !== null;
+        return self::SOLDIER;
+    }
+
+    protected function syncMeta(): array
+    {
+        return ['source' => 'commandnet', 'soldierIdProperty' => 'commandNetSoldierId', 'revokeMessage' => 'Command Net personnel status changed.'];
     }
 
     public function searchSoldiers(string $query): array
@@ -36,11 +37,6 @@ class CommandNetCardProvider
             ->where('u.displayName LIKE :q')->setParameter('q', '%'.mb_substr($query, 0, 100).'%')
             ->orderBy('u.displayName', 'ASC')->setMaxResults(25)->getQuery()->getResult();
         return array_map(static fn ($s) => ['id' => $s->getId(), 'name' => $s->getUser()->getDisplayName()], $soldiers);
-    }
-
-    public function getSoldier(int $id): ?object
-    {
-        return $this->isAvailable() ? $this->registry->getRepository(self::SOLDIER)->find($id) : null;
     }
 
     public function resolveCardData(int $soldierId, string $preference = 'auto'): CardData
@@ -65,19 +61,5 @@ class CommandNetCardProvider
         // treated as terminal here, unlike MILHQ's free-form status labels.
         $status = $soldier->getStatus()->value === 'discharged' ? 'revoked' : null;
         return new CardData($soldier->getUser()->getDisplayName(), $organization, $photo, $source, $status);
-    }
-
-    public function syncCard(IdentificationCard $card): ?string
-    {
-        if ($card->source !== 'commandnet' || !$card->commandNetSoldierId) {
-            return null;
-        }
-        $data = $this->resolveCardData($card->commandNetSoldierId);
-        if ($card->syncName) { $card->displayName = $data->name; }
-        if ($card->syncOrganization) { [$card->organizationLine1, $card->organizationLine2, $card->organizationLine3] = $data->organization; }
-        if ($card->syncPhoto && $card->photoSource !== 'custom') { $card->photo = $data->photo; $card->photoSource = $data->photoSource; }
-        if ($card->syncStatus && $data->status === 'revoked') { $card->revoke('Command Net personnel status changed.'); }
-        $card->updatedAt = new \DateTimeImmutable();
-        return $data->warning;
     }
 }

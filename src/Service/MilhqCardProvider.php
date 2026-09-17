@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace MajesticDev\ForumifyIdCard\Service;
 
-use Doctrine\Persistence\ManagerRegistry;
 use MajesticDev\ForumifyIdCard\DTO\CardData;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
 use MajesticDev\ForumifyIdCard\Entity\UnitMapping;
 
-class MilhqCardProvider
+class MilhqCardProvider extends AbstractCardProvider
 {
     private const SOLDIER = 'Forumify\\Milhq\\Entity\\Soldier';
 
-    public function __construct(private readonly ManagerRegistry $registry, private readonly CardSettings $settings) {}
-
-    public function isAvailable(): bool
+    protected function soldierEntityClass(): string
     {
-        return class_exists(self::SOLDIER) && $this->registry->getManagerForClass(self::SOLDIER) !== null;
+        return self::SOLDIER;
+    }
+
+    protected function syncMeta(): array
+    {
+        return ['source' => 'milhq', 'soldierIdProperty' => 'milhqSoldierId', 'revokeMessage' => 'MILHQ personnel status changed.'];
     }
 
     public function searchSoldiers(string $query): array
@@ -29,11 +30,6 @@ class MilhqCardProvider
             ->where('s.name LIKE :q')->setParameter('q', '%'.mb_substr($query, 0, 100).'%')
             ->orderBy('s.name', 'ASC')->setMaxResults(25)->getQuery()->getResult();
         return array_map(static fn ($s) => ['id' => $s->getId(), 'name' => $s->getName()], $soldiers);
-    }
-
-    public function getSoldier(int $id): ?object
-    {
-        return $this->isAvailable() ? $this->registry->getRepository(self::SOLDIER)->find($id) : null;
     }
 
     public function resolveCardData(int $soldierId, string $preference = 'auto'): CardData
@@ -61,19 +57,5 @@ class MilhqCardProvider
         $label = mb_strtolower(trim($soldier->getStatus()?->getName() ?? ''));
         $status = in_array($label, ['discharged', 'revoked', 'terminated'], true) ? 'revoked' : null;
         return new CardData($soldier->getName(), $organization, $photo, $source, $status, $mapping ? null : 'No unit mapping found. Default organization lines and the current unit name were used.');
-    }
-
-    public function syncCard(IdentificationCard $card): ?string
-    {
-        if ($card->source !== 'milhq' || !$card->milhqSoldierId) {
-            return null;
-        }
-        $data = $this->resolveCardData($card->milhqSoldierId);
-        if ($card->syncName) { $card->displayName = $data->name; }
-        if ($card->syncOrganization) { [$card->organizationLine1, $card->organizationLine2, $card->organizationLine3] = $data->organization; }
-        if ($card->syncPhoto && $card->photoSource !== 'custom') { $card->photo = $data->photo; $card->photoSource = $data->photoSource; }
-        if ($card->syncStatus && $data->status === 'revoked') { $card->revoke('MILHQ personnel status changed.'); }
-        $card->updatedAt = new \DateTimeImmutable();
-        return $data->warning;
     }
 }
