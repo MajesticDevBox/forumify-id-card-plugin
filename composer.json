@@ -9,7 +9,7 @@
     "forumify/forumify-platform": "^1.2.2",
     "endroid/qr-code": "^6.0"
   },
-  "require-dev": { "phpunit/phpunit": "^11.5", "symfony/browser-kit": "7.4.*", "symfony/css-selector": "7.4.*" },
+  "require-dev": { "phpunit/phpunit": "^11.5", "symfony/browser-kit": "7.4.*", "symfony/css-selector": "7.4.*", "symfony/var-exporter": "7.4.*" },
   "suggest": { "forumify/forumify-milhq-plugin": "Optional personnel source (1.2.x)." },
   "autoload": { "psr-4": { "MajesticDev\\ForumifyIdCard\\": "src/" } },
   "autoload-dev": { "psr-4": { "MajesticDev\\ForumifyIdCard\\Tests\\": "tests/" } },
