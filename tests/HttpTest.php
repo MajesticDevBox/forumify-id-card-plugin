@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace MajesticDev\ForumifyIdCard\Tests;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Doctrine\ORM\Tools\SchemaTool;
 use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\ForumifyIdCard\Service\PhotoStorage;
 
 class HttpTest extends WebTestCase
 {
@@ -84,6 +87,41 @@ class HttpTest extends WebTestCase
         $client=static::createClient();$client->loginUser(new InMemoryUser('viewer','unused',['ROLE_USER']));
         $client->request('GET','/admin/id-cards/create');
         self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testPrunePhotosOnlyDeletesUnreferencedFilesAndOnlyWithDeleteFlag(): void
+    {
+        static::createClient();
+        $em = static::getContainer()->get('doctrine')->getManager();
+        $schema = new SchemaTool($em);$metadata=$em->getMetadataFactory()->getAllMetadata();$schema->dropSchema($metadata);$schema->createSchema($metadata);
+
+        $card = new IdentificationCard();
+        $card->displayName = 'Kept'; $card->memberId = '000001';
+        $card->photoSource = 'custom'; $card->photo = 'kept.png';
+        $em->persist($card); $em->flush();
+
+        $dir = static::getContainer()->get(PhotoStorage::class)->directory();
+        if (!is_dir($dir)) { mkdir($dir, 0755, true); }
+        file_put_contents($dir.'/kept.png', 'x');
+        file_put_contents($dir.'/orphan.png', 'x');
+
+        try {
+            $tester = new CommandTester((new Application(static::$kernel))->find('id-cards:prune-photos'));
+
+            $tester->execute([]);
+            self::assertStringContainsString('Would delete orphan.png', $tester->getDisplay());
+            self::assertStringNotContainsString('kept.png', $tester->getDisplay());
+            self::assertFileExists($dir.'/orphan.png', 'dry run must not delete anything');
+            self::assertFileExists($dir.'/kept.png');
+
+            $tester->execute(['--delete' => true]);
+            self::assertStringContainsString('Deleted orphan.png', $tester->getDisplay());
+            self::assertFileDoesNotExist($dir.'/orphan.png');
+            self::assertFileExists($dir.'/kept.png', 'a photo a card still references must survive --delete');
+        } finally {
+            @unlink($dir.'/kept.png');
+            @unlink($dir.'/orphan.png');
+        }
     }
 }
 

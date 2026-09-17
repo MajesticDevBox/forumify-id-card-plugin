@@ -12,6 +12,11 @@ class PhotoStorage
 {
     public function __construct(private readonly string $projectDir, private readonly Packages $assets) {}
 
+    public function directory(): string
+    {
+        return $this->projectDir.'/public/storage/id-cards';
+    }
+
     public function upload(UploadedFile $file): string
     {
         if (!$file->isValid() || $file->getSize() > 5 * 1024 * 1024 || !in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true)) {
@@ -25,7 +30,7 @@ class PhotoStorage
         if (!$image) { throw new \DomainException('The image could not be decoded.'); }
         $ratio = min(1, 1200 / max($size[0], $size[1]));
         $scaled = imagescale($image, max(1, (int) ($size[0] * $ratio)), max(1, (int) ($size[1] * $ratio)));
-        $dir = $this->projectDir.'/public/storage/id-cards';
+        $dir = $this->directory();
         if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) { throw new \RuntimeException('Photo storage is not writable.'); }
         $name = bin2hex(random_bytes(24)).'.png';
         if (!$scaled || !imagepng($scaled, $dir.'/'.$name)) { throw new \RuntimeException('Could not save photo.'); }
