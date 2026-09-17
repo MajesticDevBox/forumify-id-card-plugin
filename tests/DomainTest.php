@@ -9,11 +9,17 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\DBAL\DriverManager;
+use MajesticDev\ForumifyIdCard\Controller\VerificationController;
 use MajesticDev\ForumifyIdCard\Entity\{IdentificationCard, UnitMapping};
-use MajesticDev\ForumifyIdCard\Service\{MemberIdGenerator, ExpirationCalculator, CardStatusResolver, MilhqCardProvider, CommandNetCardProvider, CardSettings, QrCodeGenerator};
+use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\ForumifyIdCard\Service\{MemberIdGenerator, ExpirationCalculator, CardStatusResolver, MilhqCardProvider, CommandNetCardProvider, CardSettings, QrCodeGenerator, CardRenderer};
 use PHPUnit\Framework\TestCase;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectRepository;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\LimiterInterface;
+use Symfony\Component\RateLimiter\RateLimit;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Psr\Log\NullLogger;
 
@@ -249,5 +255,29 @@ class DomainTest extends TestCase
         $provider=$this->getMockBuilder(MilhqCardProvider::class)->setConstructorArgs([$registry,$settings])->onlyMethods(['getSoldier'])->getMock();
         $provider->method('getSoldier')->willReturn($soldier);
         self::assertSame(['2nd Ranger Battalion','Misfit Company','Misfit - 1 A'],$provider->resolveCardData(1)->organization);
+    }
+
+    public function testVerificationIsRateLimitedBeforeTouchingTheRepository(): void
+    {
+        $limiter = $this->createMock(LimiterInterface::class);
+        $limiter->method('consume')->willReturn(new RateLimit(0, new \DateTimeImmutable('+7 seconds'), false, 20));
+        $factory = $this->createMock(RateLimiterFactoryInterface::class);
+        $factory->expects(self::once())->method('create')->with('203.0.113.5')->willReturn($limiter);
+
+        $cards = $this->createMock(IdentificationCardRepository::class);
+        $cards->expects(self::never())->method('findOneBy');
+        $renderer = $this->createMock(CardRenderer::class);
+
+        $controller = new VerificationController();
+        $response = $controller(
+            str_repeat('a', 64),
+            Request::create('/id/'.str_repeat('a', 64), server: ['REMOTE_ADDR' => '203.0.113.5']),
+            $cards,
+            $renderer,
+            $factory,
+        );
+
+        self::assertSame(429, $response->getStatusCode());
+        self::assertGreaterThanOrEqual(1, (int) $response->headers->get('Retry-After'));
     }
 }

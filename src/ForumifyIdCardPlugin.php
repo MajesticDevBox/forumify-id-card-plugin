@@ -28,5 +28,13 @@ class ForumifyIdCardPlugin extends AbstractForumifyPlugin
             'is_bundle' => false, 'type' => 'attribute', 'dir' => $this->getPath().'/src/Entity', 'prefix' => __NAMESPACE__.'\\Entity',
         ]]]]);
         $container->extension('doctrine_migrations', ['migrations_paths' => ['MajesticDevIdCardMigrations' => $this->getPath().'/migrations']]);
+        // /id/{token} is public and unauthenticated (a QR code scan), so Forumify's own
+        // SimpleRateLimiter doesn't apply here - it no-ops for anonymous users by design.
+        // Effectively unlimited under test: the HTTP suite hits this route several times
+        // per test and shouldn't have to account for throttling.
+        $container->extension('framework', ['rate_limiter' => ['id_cards.verify' => $container->env() === 'test'
+            ? ['policy' => 'fixed_window', 'limit' => 999999, 'interval' => '1 second']
+            : ['policy' => 'sliding_window', 'limit' => 20, 'interval' => '1 minute'],
+        ]]);
     }
 }

@@ -66,7 +66,7 @@ For example, run this hourly using your existing scheduler. No scheduler is nece
 
 ## Verification and revocation
 
-QR codes contain only the absolute `/id/{64-character-random-token}` verification URL. They do not contain personal JSON, email, Steam IDs, notes or sequential database IDs. Public verification shows the same public card fields and computed ACTIVE / EXPIRED / REVOKED state. Unknown or deleted tokens return 404. Responses are not cached and are marked noindex.
+QR codes contain only the absolute `/id/{64-character-random-token}` verification URL. They do not contain personal JSON, email, Steam IDs, notes or sequential database IDs. Public verification shows the same public card fields and computed ACTIVE / EXPIRED / REVOKED state. Unknown or deleted tokens return 404. Responses are not cached and are marked noindex. The route is rate-limited per IP address (`id_cards.verify`, 20 requests/minute by default — adjust via `framework.rate_limiter.limiters.id_cards.verify` in your app config); this doesn't make a token guessable, it just slows down a scripted scan of many tokens.
 
 The QR is a bearer link: anyone possessing it can see the public card fields. It is a community roster lookup, not proof of a real-world identity. Configure the optional canonical HTTPS origin before issuing cards. Keep the host stable; changing a host cannot alter already downloaded QR images. Ensure reverse-proxy trusted-host settings are correct in the parent application. If your parent Forumify security configuration protects every URL, add a `PUBLIC_ACCESS` rule for `^/id/[a-f0-9]{64}$` before that catch-all; this plugin does not weaken the parent's security configuration.
 
