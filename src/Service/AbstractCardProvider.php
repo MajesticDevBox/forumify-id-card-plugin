@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MajesticDev\ForumifyIdCard\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Forumify\Core\Entity\User;
 use MajesticDev\ForumifyIdCard\DTO\CardData;
 use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
 
@@ -34,6 +35,20 @@ abstract class AbstractCardProvider
     public function getSoldier(int $id): ?object
     {
         return $this->isAvailable() ? $this->registry->getRepository($this->soldierEntityClass())->find($id) : null;
+    }
+
+    /**
+     * Resolves this source's soldier/profile id for a forumify user, e.g. for the Discord
+     * "/id-card" command's self-lookup. Both optional soldier entities have a `user`
+     * association, so this stays generic rather than duplicated per subclass.
+     */
+    public function findSoldierIdForUser(User $user): ?int
+    {
+        if (!$this->isAvailable()) {
+            return null;
+        }
+        $soldier = $this->registry->getRepository($this->soldierEntityClass())->findOneBy(['user' => $user]);
+        return $soldier?->getId();
     }
 
     abstract public function searchSoldiers(string $query): array;

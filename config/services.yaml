@@ -4,7 +4,7 @@ services:
         autoconfigure: true
     MajesticDev\ForumifyIdCard\:
         resource: '../src/'
-        exclude: ['../src/Entity/', '../src/Enum/', '../src/DTO/', '../src/ForumifyIdCardPlugin.php']
+        exclude: ['../src/Entity/', '../src/Enum/', '../src/DTO/', '../src/ForumifyIdCardPlugin.php', '../src/Discord/']
     MajesticDev\ForumifyIdCard\Service\PhotoStorage:
         arguments:
             $projectDir: '%kernel.project_dir%'

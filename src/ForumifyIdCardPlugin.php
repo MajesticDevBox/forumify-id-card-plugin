@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MajesticDev\ForumifyIdCard;
 
+use Forumify\Discord\ForumifyDiscordPlugin;
 use Forumify\Plugin\AbstractForumifyPlugin;
 use Forumify\Plugin\PluginMetadata;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -36,5 +37,25 @@ class ForumifyIdCardPlugin extends AbstractForumifyPlugin
             ? ['policy' => 'fixed_window', 'limit' => 999999, 'interval' => '1 second']
             : ['policy' => 'sliding_window', 'limit' => 20, 'interval' => '1 minute'],
         ]]);
+    }
+
+    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        parent::loadExtension($config, $container, $builder);
+
+        if ($this->isPluginLoaded($builder, ForumifyDiscordPlugin::class)) {
+            $container->import($this->getPath() . '/config/discord.php');
+        }
+    }
+
+    /**
+     * @param class-string $pluginClass
+     */
+    private function isPluginLoaded(ContainerBuilder $builder, string $pluginClass): bool
+    {
+        /** @var array<string, class-string> $bundles */
+        $bundles = $builder->getParameter('kernel.bundles');
+
+        return in_array($pluginClass, $bundles, true);
     }
 }
