@@ -3,3 +3,6 @@
 /.phpunit.cache/
 /var/
 /public/storage/
+
+# Local dev server login details - never commit.
+/dev-credentials.local.md
