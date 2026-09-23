@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MajesticDev\ForumifyIdCard;
 
-use Forumify\Discord\ForumifyDiscordPlugin;
+use MajesticDev\Discord\CommandNetDiscordPlugin;
 use Forumify\Plugin\AbstractForumifyPlugin;
 use Forumify\Plugin\PluginMetadata;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -14,7 +14,13 @@ class ForumifyIdCardPlugin extends AbstractForumifyPlugin
 {
     public function getPluginMetadata(): PluginMetadata
     {
-        return new PluginMetadata('ID Cards', 'MajesticDev', 'Create and manage MILSIM identification cards with optional MILHQ personnel integration.', settingsRoute: 'id_cards_settings');
+        return new PluginMetadata(
+            'ID Cards',
+            'MajesticDev',
+            'Create and manage MILSIM identification cards with optional MILHQ personnel integration.',
+            'https://example.com', // TODO: replace with real domain once purchased
+            settingsRoute: 'id_cards_settings',
+        );
     }
 
     public function getPermissions(): array
@@ -43,7 +49,7 @@ class ForumifyIdCardPlugin extends AbstractForumifyPlugin
     {
         parent::loadExtension($config, $container, $builder);
 
-        if ($this->isPluginLoaded($builder, ForumifyDiscordPlugin::class)) {
+        if ($this->isPluginLoaded($builder, CommandNetDiscordPlugin::class)) {
             $container->import($this->getPath() . '/config/discord.php');
         }
     }
