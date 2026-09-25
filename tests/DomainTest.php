@@ -73,16 +73,18 @@ class DomainTest extends TestCase
     {
         require_once dirname(__DIR__).'/migrations/Version20260914000000.php';
         require_once dirname(__DIR__).'/migrations/Version20260916000000.php';
+        require_once dirname(__DIR__).'/migrations/Version20260925000000.php';
         $config = ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__).'/src/Entity'], true);
         $config->setNamingStrategy(new UnderscoreNamingStrategy(CASE_LOWER));
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
         $em = new EntityManager($connection, $config);
         $schema = new \Doctrine\DBAL\Schema\Schema();
-        // Both migrations have to be applied to the same Schema before comparing against the
-        // entity mapping - a schema test that only runs the first migration would keep
-        // passing even if the Command Net columns drifted from the entity.
+        // Every migration has to be applied to the same Schema before comparing against the
+        // entity mapping - a schema test that skips a migration would keep passing even if
+        // its columns drifted from the entity.
         (new \MajesticDevIdCardMigrations\Version20260914000000($connection, new NullLogger()))->up($schema);
         (new \MajesticDevIdCardMigrations\Version20260916000000($connection, new NullLogger()))->up($schema);
+        (new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger()))->up($schema);
         foreach ($schema->toSql($connection->getDatabasePlatform()) as $sql) { $connection->executeStatement($sql); }
         $metadata = [$em->getClassMetadata(IdentificationCard::class), $em->getClassMetadata(UnitMapping::class)];
         self::assertSame([], (new SchemaTool($em))->getUpdateSchemaSql($metadata));
@@ -126,6 +128,11 @@ class DomainTest extends TestCase
             public function getPrimaryAssignment(): object { return $this->assignment; }
             public function getUser(): object { return $this->user; }
             public function getStatus(): object { return $this->status; }
+            public function getRank(): ?object { return null; }
+            public function getSpecialty(): ?object { return null; }
+            public function getCallsign(): ?string { return null; }
+            public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+            public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
         };
 
         $settings = $this->createMock(CardSettings::class);
@@ -145,6 +152,8 @@ class DomainTest extends TestCase
         // should never populate a warning at all.
         self::assertNull($data->warning);
         self::assertNull($data->status);
+        self::assertSame([], $data->qualifications);
+        self::assertSame([], $data->awards);
     }
 
     public function testCommandNetDischargedIsTheOnlyTerminalStatus(): void
@@ -170,6 +179,11 @@ class DomainTest extends TestCase
                 public function getPrimaryAssignment(): object { return $this->assignment; }
                 public function getUser(): object { return $this->user; }
                 public function getStatus(): object { return $this->status; }
+                public function getRank(): ?object { return null; }
+                public function getSpecialty(): ?object { return null; }
+                public function getCallsign(): ?string { return null; }
+                public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+                public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
             };
             $provider = $this->getMockBuilder(CommandNetCardProvider::class)
                 ->setConstructorArgs([$this->createMock(ManagerRegistry::class), $settings])
@@ -178,6 +192,94 @@ class DomainTest extends TestCase
             $provider->method('getSoldier')->willReturn($soldier);
             self::assertSame($expected, $provider->resolveCardData(1)->status, "status for '$label'");
         }
+    }
+
+    public function testCommandNetMapsRankSpecialtyCallsignQualificationsAndAwards(): void
+    {
+        $unit = new class { public function getName(): string { return 'HQ'; } };
+        $assignment = new class($unit) {
+            public function __construct(private object $unit) {}
+            public function getUnit(): object { return $this->unit; }
+        };
+        $user = new class {
+            public function getDisplayName(): string { return 'Member'; }
+            public function getAvatar(): ?string { return null; }
+        };
+        $status = new class { public string $value = 'active'; };
+        $rank = new class { public function getName(): string { return 'Sergeant'; } };
+        $specialty = new class { public function getName(): string { return 'Rifleman'; } };
+        $tier = new class { public string $value = 'advanced'; };
+        $qualification = new class($tier) {
+            public function __construct(private object $tier) {}
+            public function getName(): string { return 'Combat Medic'; }
+            public function getTier(): ?object { return $this->tier; }
+        };
+        $soldierQualification = new class($qualification) {
+            public function __construct(private object $qualification) {}
+            public function getQualification(): object { return $this->qualification; }
+        };
+        $award = new class { public function getName(): string { return 'Medal of Honor'; } };
+        $soldierAward = new class($award) {
+            public function __construct(private object $award) {}
+            public function getAward(): object { return $this->award; }
+        };
+        $soldier = new class($assignment, $user, $status, $rank, $specialty, $soldierQualification, $soldierAward) {
+            public function __construct(
+                private object $assignment, private object $user, private object $status,
+                private object $rank, private object $specialty,
+                private object $soldierQualification, private object $soldierAward,
+            ) {}
+            public function getPrimaryAssignment(): object { return $this->assignment; }
+            public function getUser(): object { return $this->user; }
+            public function getStatus(): object { return $this->status; }
+            public function getRank(): object { return $this->rank; }
+            public function getSpecialty(): object { return $this->specialty; }
+            public function getCallsign(): string { return 'Reaper'; }
+            public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection([$this->soldierQualification]); }
+            public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection([$this->soldierAward]); }
+        };
+
+        $settings = $this->createMock(CardSettings::class);
+        $settings->method('all')->willReturn(CardSettings::DEFAULTS);
+        $provider = $this->getMockBuilder(CommandNetCardProvider::class)
+            ->setConstructorArgs([$this->createMock(ManagerRegistry::class), $settings])
+            ->onlyMethods(['getSoldier'])
+            ->getMock();
+        $provider->method('getSoldier')->willReturn($soldier);
+
+        $data = $provider->resolveCardData(1);
+        self::assertSame('Sergeant', $data->rank);
+        self::assertSame('Rifleman', $data->specialty);
+        self::assertSame('Reaper', $data->callsign);
+        self::assertSame([['name' => 'Combat Medic', 'tier' => 'advanced']], $data->qualifications);
+        self::assertSame([['name' => 'Medal of Honor']], $data->awards);
+    }
+
+    public function testSyncQualificationsFlagGatesTheNewFields(): void
+    {
+        $card = new IdentificationCard();
+        $card->source = 'commandnet';
+        $card->commandNetSoldierId = 7;
+
+        $provider = $this->getMockBuilder(CommandNetCardProvider::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['resolveCardData'])
+            ->getMock();
+        $provider->method('resolveCardData')->willReturn(
+            new \MajesticDev\ForumifyIdCard\DTO\CardData('Name', ['A', 'B', 'C'], null, 'default', null, rank: 'Sergeant', callsign: 'Reaper', qualifications: [['name' => 'Combat Medic', 'tier' => null]]),
+        );
+
+        $card->syncQualifications = false;
+        $provider->syncCard($card);
+        self::assertNull($card->rank);
+        self::assertNull($card->callsign);
+        self::assertSame([], $card->qualifications);
+
+        $card->syncQualifications = true;
+        $provider->syncCard($card);
+        self::assertSame('Sergeant', $card->rank);
+        self::assertSame('Reaper', $card->callsign);
+        self::assertSame([['name' => 'Combat Medic', 'tier' => null]], $card->qualifications);
     }
 
     public function testCommandNetSyncPreservesOwnedFieldsAndCustomPhoto(): void

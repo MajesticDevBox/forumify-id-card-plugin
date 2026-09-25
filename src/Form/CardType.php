@@ -56,6 +56,9 @@ class CardType extends AbstractType
             ->add('organizationLine1', TextType::class, ['required' => false, 'empty_data' => ''])
             ->add('organizationLine2', TextType::class, ['required' => false, 'empty_data' => ''])
             ->add('organizationLine3', TextType::class, ['required' => false, 'empty_data' => ''])
+            ->add('rank', TextType::class, ['required' => false])
+            ->add('specialty', TextType::class, ['required' => false])
+            ->add('callsign', TextType::class, ['required' => false])
             ->add('photoPreference', ChoiceType::class, ['mapped' => false, 'choices' => ['Keep current / automatic fallback' => 'keep', 'Custom Upload' => 'custom', 'MILHQ Uniform' => 'milhq_uniform', 'Forumify Avatar' => 'forumify_avatar', 'Default Placeholder' => 'default']])
             ->add('upload', FileType::class, ['mapped' => false, 'required' => false, 'label' => 'Portrait photo', 'constraints' => [new Assert\Image(maxSize: '5M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'], minWidth: 80, minHeight: 80, maxPixels: 24000000)], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']])
             ->add('issueDate', DateType::class, ['widget' => 'single_text', 'input' => 'datetime_immutable'])
@@ -71,6 +74,7 @@ class CardType extends AbstractType
             ->add('syncStatus', CheckboxType::class, ['required' => false, 'help' => $commandNetOffered
                 ? 'A terminal personnel status (MILHQ discharged/revoked/terminated, or a Command Net discharge) revokes the card. Other statuses do not change validity.'
                 : 'Discharged, revoked or terminated MILHQ status revokes the card. Other labels do not change validity.'])
+            ->add('syncQualifications', CheckboxType::class, ['required' => false, 'label' => 'Sync rank, specialty, callsign, qualifications & awards', 'help' => 'Only applies to Command Net soldiers - qualifications and awards are read-only and always come from the linked record.'])
             ->add('notes', TextareaType::class, ['required' => false, 'help' => 'Administrator notes. Never displayed publicly.']);
     }
 

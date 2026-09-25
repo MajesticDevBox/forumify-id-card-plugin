@@ -1,6 +1,14 @@
 {% extends '@ForumifyIdCardPlugin/admin/base.html.twig' %}
 {% block card_body %}
-<div class="id-detail"><section class="id-preview">{% include '@ForumifyIdCardPlugin/card.html.twig' %}</section><section class="id-panel"><span class="id-status {{ data.status }}">{{ data.status|upper }}</span><h2>{{ card.displayName }}</h2><p>Member ID {{ card.memberId }} · {{ card.source|upper }}</p><div class="id-actions">
+<div class="id-detail"><section class="id-preview">{% include '@ForumifyIdCardPlugin/card.html.twig' %}</section><section class="id-panel"><span class="id-status {{ data.status }}">{{ data.status|upper }}</span><h2>{{ card.displayName }}</h2><p>Member ID {{ card.memberId }} · {{ card.source|upper }}</p>
+{% set serviceBits = [] %}
+{% if card.rank %}{% set serviceBits = serviceBits|merge([card.rank]) %}{% endif %}
+{% if card.specialty %}{% set serviceBits = serviceBits|merge([card.specialty]) %}{% endif %}
+{% if card.callsign %}{% set serviceBits = serviceBits|merge(['"' ~ card.callsign ~ '"']) %}{% endif %}
+{% if serviceBits is not empty %}<p class="id-service-line">{{ serviceBits|join(' · ') }}</p>{% endif %}
+{% if card.qualifications is not empty %}<div class="id-quals"><h3>Qualifications</h3><ul>{% for q in card.qualifications %}<li>{{ q.name }}{% if q.tier %} <span class="id-tier">{{ q.tier }}</span>{% endif %}</li>{% endfor %}</ul></div>{% endif %}
+{% if card.awards is not empty %}<div class="id-awards"><h3>Awards</h3><ul>{% for a in card.awards %}<li>{{ a.name }}</li>{% endfor %}</ul></div>{% endif %}
+<div class="id-actions">
 {% if is_granted('id-cards.admin.id_cards.manage') %}<a href="{{ path('id_cards_edit', {id:card.id}) }}">Edit card</a>{% endif %}
 {% if is_granted('id-cards.admin.id_cards.download') %}<a class="id-primary" href="{{ path('id_cards_download', {id:card.id}) }}">Download PNG</a>{% endif %}
 <a href="{{ data.verificationUrl }}" rel="noreferrer">Public verification</a></div>

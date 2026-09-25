@@ -22,6 +22,8 @@ class CardRenderer
             'qr' => 'data:image/png;base64,'.base64_encode($this->qr->png($card)), 'verificationUrl' => $this->qr->url($card),
             'header' => $settings['header'], 'subtitle' => $settings['subtitle'], 'disclaimer' => $settings['disclaimer'],
             'logo' => $settings['logo'] ? '/storage/id-cards/'.basename($settings['logo']) : null,
+            'rank' => $card->rank, 'specialty' => $card->specialty, 'callsign' => $card->callsign,
+            'qualifications' => $card->qualifications, 'awards' => $card->awards,
         ];
     }
 }

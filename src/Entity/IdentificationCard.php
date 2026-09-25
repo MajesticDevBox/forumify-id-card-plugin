@@ -70,6 +70,23 @@ class IdentificationCard
     public bool $syncPhoto = true;
     #[ORM\Column]
     public bool $syncStatus = false;
+    #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(max: 100)]
+    public ?string $rank = null;
+    #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(max: 100)]
+    public ?string $specialty = null;
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\Length(max: 50)]
+    public ?string $callsign = null;
+    /** @var array<int, array{name: string, tier: ?string}> */
+    #[ORM\Column(type: 'json')]
+    public array $qualifications = [];
+    /** @var array<int, array{name: string}> */
+    #[ORM\Column(type: 'json')]
+    public array $awards = [];
+    #[ORM\Column]
+    public bool $syncQualifications = true;
     #[ORM\Column(type: 'datetime_immutable')]
     public \DateTimeImmutable $createdAt;
     #[ORM\Column(type: 'datetime_immutable')]
