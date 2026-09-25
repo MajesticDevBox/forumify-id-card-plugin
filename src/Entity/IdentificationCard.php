@@ -80,10 +80,10 @@ class IdentificationCard
     #[Assert\Length(max: 50)]
     public ?string $callsign = null;
     /** @var array<int, array{name: string, tier: ?string}> */
-    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    #[ORM\Column(type: 'json')]
     public array $qualifications = [];
     /** @var array<int, array{name: string}> */
-    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    #[ORM\Column(type: 'json')]
     public array $awards = [];
     #[ORM\Column(options: ['default' => true])]
     public bool $syncQualifications = true;
