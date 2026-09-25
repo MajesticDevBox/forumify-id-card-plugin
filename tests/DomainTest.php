@@ -104,6 +104,36 @@ class DomainTest extends TestCase
         self::assertTrue($reloaded->autoSyncCommandNet);
     }
 
+    /**
+     * A schema test against an empty database (as above) can't catch an ADD COLUMN that
+     * would fail against a table that already has rows - which is exactly the case a
+     * migration runs against in the field. NOT NULL columns with no DEFAULT (json/boolean
+     * columns added after the table already exists) fail outright here unless the
+     * migration supplies one.
+     */
+    public function testNewColumnsMigrateOntoAnExistingRowWithSaneDefaults(): void
+    {
+        require_once dirname(__DIR__).'/migrations/Version20260925000000.php';
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $connection->executeStatement('CREATE TABLE majestic_id_card (id INTEGER PRIMARY KEY)');
+        $connection->executeStatement('INSERT INTO majestic_id_card (id) VALUES (1)');
+
+        $schemaManager = $connection->createSchemaManager();
+        $fromSchema = $schemaManager->introspectSchema();
+        $toSchema = clone $fromSchema;
+        (new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger()))->up($toSchema);
+        $diff = $schemaManager->createComparator()->compareSchemas($fromSchema, $toSchema);
+        foreach ($connection->getDatabasePlatform()->getAlterSchemaSQL($diff) as $sql) {
+            $connection->executeStatement($sql);
+        }
+
+        $row = $connection->fetchAssociative('SELECT qualifications, awards, sync_qualifications, rank FROM majestic_id_card WHERE id = 1');
+        self::assertSame('[]', $row['qualifications']);
+        self::assertSame('[]', $row['awards']);
+        self::assertSame(1, $row['sync_qualifications']);
+        self::assertNull($row['rank']);
+    }
+
     public function testOptionalCommandNetAndTerminalStatusOnly(): void
     {
         $provider = new CommandNetCardProvider($this->createMock(ManagerRegistry::class), $this->createMock(CardSettings::class));

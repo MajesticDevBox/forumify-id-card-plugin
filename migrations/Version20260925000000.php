@@ -20,9 +20,11 @@ final class Version20260925000000 extends AbstractMigration
         $card->addColumn('rank', 'string', ['length' => 100, 'notnull' => false]);
         $card->addColumn('specialty', 'string', ['length' => 100, 'notnull' => false]);
         $card->addColumn('callsign', 'string', ['length' => 50, 'notnull' => false]);
-        $card->addColumn('qualifications', 'json');
-        $card->addColumn('awards', 'json');
-        $card->addColumn('sync_qualifications', 'boolean');
+        // Existing rows need a real default, not just the PHP-side property initializer -
+        // ADD COLUMN ... NOT NULL with no DEFAULT fails outright against a populated table.
+        $card->addColumn('qualifications', 'json', ['default' => '[]']);
+        $card->addColumn('awards', 'json', ['default' => '[]']);
+        $card->addColumn('sync_qualifications', 'boolean', ['default' => true]);
     }
 
     public function down(Schema $schema): void
