@@ -84,8 +84,13 @@ class DomainTest extends TestCase
         // its columns drifted from the entity.
         (new \MajesticDevIdCardMigrations\Version20260914000000($connection, new NullLogger()))->up($schema);
         (new \MajesticDevIdCardMigrations\Version20260916000000($connection, new NullLogger()))->up($schema);
-        (new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger()))->up($schema);
+        $version20260925 = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        $version20260925->up($schema);
         foreach ($schema->toSql($connection->getDatabasePlatform()) as $sql) { $connection->executeStatement($sql); }
+        // The real migrations executor always calls postUp() with the schema up() just
+        // mutated - Version20260925000000 relies on it to tighten qualifications/awards to
+        // NOT NULL, so skipping it here would leave them nullable and hide schema drift.
+        $version20260925->postUp($schema);
         $metadata = [$em->getClassMetadata(IdentificationCard::class), $em->getClassMetadata(UnitMapping::class)];
         self::assertSame([], (new SchemaTool($em))->getUpdateSchemaSql($metadata));
         $card = new IdentificationCard(); $card->displayName='Majestic44';$card->memberId='006592';
@@ -121,16 +126,26 @@ class DomainTest extends TestCase
         $schemaManager = $connection->createSchemaManager();
         $fromSchema = $schemaManager->introspectSchema();
         $toSchema = clone $fromSchema;
-        (new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger()))->up($toSchema);
+        $migration = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        $migration->up($toSchema);
         $diff = $schemaManager->createComparator()->compareSchemas($fromSchema, $toSchema);
         foreach ($connection->getDatabasePlatform()->getAlterSchemaSQL($diff) as $sql) {
             $connection->executeStatement($sql);
         }
+        // Mirrors the real executor: postUp() runs against the schema up() just mutated,
+        // after its ALTER statements have already been applied to the live connection.
+        $migration->postUp($toSchema);
 
         $row = $connection->fetchAssociative('SELECT qualifications, awards, sync_qualifications, rank FROM majestic_id_card WHERE id = 1');
         self::assertSame('[]', $row['qualifications']);
         self::assertSame('[]', $row['awards']);
         self::assertSame(1, $row['sync_qualifications']);
+        try {
+            $connection->executeStatement('INSERT INTO majestic_id_card (id) VALUES (2)');
+            self::fail('qualifications/awards should be NOT NULL after postUp() tightens them');
+        } catch (\Doctrine\DBAL\Exception $e) {
+            self::assertStringContainsString('NOT NULL', $e->getMessage());
+        }
         self::assertNull($row['rank']);
     }
 
