@@ -80,12 +80,12 @@ class IdentificationCard
     #[Assert\Length(max: 50)]
     public ?string $callsign = null;
     /** @var array<int, array{name: string, tier: ?string}> */
-    #[ORM\Column(type: 'json')]
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     public array $qualifications = [];
     /** @var array<int, array{name: string}> */
-    #[ORM\Column(type: 'json')]
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     public array $awards = [];
-    #[ORM\Column]
+    #[ORM\Column(options: ['default' => true])]
     public bool $syncQualifications = true;
     #[ORM\Column(type: 'datetime_immutable')]
     public \DateTimeImmutable $createdAt;
