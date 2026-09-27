@@ -15,7 +15,7 @@ class MilsimIdCardPlugin extends AbstractForumifyPlugin
     public function getPluginMetadata(): PluginMetadata
     {
         return new PluginMetadata(
-            'ID Cards',
+            'MILSIM ID Cards',
             'MajesticDev',
             'Create and manage MILSIM identification cards with optional MILHQ personnel integration.',
             'https://example.com', // TODO: replace with real domain once purchased
