@@ -1,6 +1,6 @@
 {% extends '@Forumify/admin/base.html.twig' %}
 {% block body %}
-<link rel="stylesheet" href="{{ asset('bundles/forumifyidcardplugin/card.css') }}">
+<link rel="stylesheet" href="{{ asset('bundles/milsimidcardplugin/card.css') }}">
 <section class="id-workspace">
     <header class="id-heading"><div><span class="id-eyebrow">SPEARHEAD / PERSONNEL SERVICES</span><h1>Identification Cards</h1></div><span class="id-tag">MILSIM ONLY</span></header>
     <nav class="id-nav" aria-label="Identification cards">
@@ -11,5 +11,5 @@
     {% for kind, messages in app.flashes %}{% for message in messages %}<p class="id-notice">{{ message }}</p>{% endfor %}{% endfor %}
     {% block card_body %}{% endblock %}
 </section>
-<script type="module" src="{{ asset('bundles/forumifyidcardplugin/card.js') }}"></script>
+<script type="module" src="{{ asset('bundles/milsimidcardplugin/card.js') }}"></script>
 {% endblock %}
