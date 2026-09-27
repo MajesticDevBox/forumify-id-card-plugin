@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Tests;
+namespace MajesticDev\MilsimIdCard\Tests;
 
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;

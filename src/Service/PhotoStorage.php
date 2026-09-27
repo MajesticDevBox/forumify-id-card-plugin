@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 

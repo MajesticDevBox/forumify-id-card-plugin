@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Command;
+namespace MajesticDev\MilsimIdCard\Command;
 
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\PhotoStorage;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\PhotoStorage;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\ErrorCorrectionLevel;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class QrCodeGenerator

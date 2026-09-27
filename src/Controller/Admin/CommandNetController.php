@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Controller\Admin;
+namespace MajesticDev\MilsimIdCard\Controller\Admin;
 
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\{CardIssuer, CardSettings, CommandNetCardProvider, ExpirationCalculator, PhotoStorage};
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\{CardIssuer, CardSettings, CommandNetCardProvider, ExpirationCalculator, PhotoStorage};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;

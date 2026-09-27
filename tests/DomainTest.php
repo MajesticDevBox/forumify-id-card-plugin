@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Tests;
+namespace MajesticDev\MilsimIdCard\Tests;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\DBAL\DriverManager;
-use MajesticDev\ForumifyIdCard\Controller\VerificationController;
-use MajesticDev\ForumifyIdCard\Entity\{IdentificationCard, UnitMapping};
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\{MemberIdGenerator, ExpirationCalculator, CardStatusResolver, MilhqCardProvider, CommandNetCardProvider, CardSettings, QrCodeGenerator, CardRenderer};
+use MajesticDev\MilsimIdCard\Controller\VerificationController;
+use MajesticDev\MilsimIdCard\Entity\{IdentificationCard, UnitMapping};
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\{MemberIdGenerator, ExpirationCalculator, CardStatusResolver, MilhqCardProvider, CommandNetCardProvider, CardSettings, QrCodeGenerator, CardRenderer};
 use PHPUnit\Framework\TestCase;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectRepository;
@@ -82,9 +82,9 @@ class DomainTest extends TestCase
         // Every migration has to be applied to the same Schema before comparing against the
         // entity mapping - a schema test that skips a migration would keep passing even if
         // its columns drifted from the entity.
-        (new \MajesticDevIdCardMigrations\Version20260914000000($connection, new NullLogger()))->up($schema);
-        (new \MajesticDevIdCardMigrations\Version20260916000000($connection, new NullLogger()))->up($schema);
-        $version20260925 = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        (new \MajesticDevMilsimIdCardMigrations\Version20260914000000($connection, new NullLogger()))->up($schema);
+        (new \MajesticDevMilsimIdCardMigrations\Version20260916000000($connection, new NullLogger()))->up($schema);
+        $version20260925 = new \MajesticDevMilsimIdCardMigrations\Version20260925000000($connection, new NullLogger());
         $version20260925->up($schema);
         foreach ($schema->toSql($connection->getDatabasePlatform()) as $sql) { $connection->executeStatement($sql); }
         // The real migrations executor always calls postUp() with the schema up() just
@@ -126,7 +126,7 @@ class DomainTest extends TestCase
         $schemaManager = $connection->createSchemaManager();
         $fromSchema = $schemaManager->introspectSchema();
         $toSchema = clone $fromSchema;
-        $migration = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        $migration = new \MajesticDevMilsimIdCardMigrations\Version20260925000000($connection, new NullLogger());
         $migration->up($toSchema);
         $diff = $schemaManager->createComparator()->compareSchemas($fromSchema, $toSchema);
         foreach ($connection->getDatabasePlatform()->getAlterSchemaSQL($diff) as $sql) {
@@ -311,7 +311,7 @@ class DomainTest extends TestCase
             ->onlyMethods(['resolveCardData'])
             ->getMock();
         $provider->method('resolveCardData')->willReturn(
-            new \MajesticDev\ForumifyIdCard\DTO\CardData('Name', ['A', 'B', 'C'], null, 'default', null, rank: 'Sergeant', callsign: 'Reaper', qualifications: [['name' => 'Combat Medic', 'tier' => null]]),
+            new \MajesticDev\MilsimIdCard\DTO\CardData('Name', ['A', 'B', 'C'], null, 'default', null, rank: 'Sergeant', callsign: 'Reaper', qualifications: [['name' => 'Combat Medic', 'tier' => null]]),
         );
 
         $card->syncQualifications = false;
@@ -342,7 +342,7 @@ class DomainTest extends TestCase
             ->onlyMethods(['resolveCardData'])
             ->getMock();
         $provider->method('resolveCardData')->willReturn(
-            new \MajesticDev\ForumifyIdCard\DTO\CardData('New name', ['A', 'B', 'C'], 'avatar.png', 'forumify_avatar', 'revoked'),
+            new \MajesticDev\MilsimIdCard\DTO\CardData('New name', ['A', 'B', 'C'], 'avatar.png', 'forumify_avatar', 'revoked'),
         );
         $card->syncStatus = true;
         $provider->syncCard($card);
@@ -378,7 +378,7 @@ class DomainTest extends TestCase
         $card = new IdentificationCard();$card->source='milhq';$card->milhqSoldierId=7;$card->memberId='006592';$card->photoSource='custom';$card->photo='custom.png';
         $before = [$card->memberId,$card->issueDate,$card->expirationDate,$card->qrToken];
         $provider=$this->getMockBuilder(MilhqCardProvider::class)->disableOriginalConstructor()->onlyMethods(['resolveCardData'])->getMock();
-        $provider->method('resolveCardData')->willReturn(new \MajesticDev\ForumifyIdCard\DTO\CardData('New name',['A','B','C'],'uniform.png','milhq_uniform','revoked'));
+        $provider->method('resolveCardData')->willReturn(new \MajesticDev\MilsimIdCard\DTO\CardData('New name',['A','B','C'],'uniform.png','milhq_uniform','revoked'));
         $card->syncStatus=true;$provider->syncCard($card);
         self::assertSame('New name',$card->displayName);self::assertSame('C',$card->organizationLine3);self::assertSame('custom.png',$card->photo);self::assertSame('revoked',$card->status);
         self::assertSame($before,[$card->memberId,$card->issueDate,$card->expirationDate,$card->qrToken]);

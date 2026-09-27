@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
-use MajesticDev\ForumifyIdCard\DTO\CardData;
-use MajesticDev\ForumifyIdCard\Entity\UnitMapping;
+use MajesticDev\MilsimIdCard\DTO\CardData;
+use MajesticDev\MilsimIdCard\Entity\UnitMapping;
 
 class MilhqCardProvider extends AbstractCardProvider
 {

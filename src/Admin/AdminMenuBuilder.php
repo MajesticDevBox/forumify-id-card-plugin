@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Admin;
+namespace MajesticDev\MilsimIdCard\Admin;
 
 use Forumify\Admin\MenuBuilder\AdminMenuBuilderInterface;
 use Forumify\Core\MenuBuilder\Menu;

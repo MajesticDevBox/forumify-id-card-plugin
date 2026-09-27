@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\DTO;
+namespace MajesticDev\MilsimIdCard\DTO;
 
 final readonly class CardData
 {

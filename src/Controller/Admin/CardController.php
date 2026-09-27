@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Controller\Admin;
+namespace MajesticDev\MilsimIdCard\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Form\CardType;
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\{CardIssuer, CardRenderer, CardSettings, CardStatusResolver, CommandNetCardProvider, ExpirationCalculator, MilhqCardProvider, PhotoStorage};
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Form\CardType;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\{CardIssuer, CardRenderer, CardSettings, CardStatusResolver, CommandNetCardProvider, ExpirationCalculator, MilhqCardProvider, PhotoStorage};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -27,7 +27,7 @@ class CardController extends AbstractController
         $page = max(1, $request->query->getInt('page', 1));
         $filters = ['q' => mb_substr($request->query->getString('q'), 0, 100), 'source' => $request->query->getString('source'), 'status' => $request->query->getString('status')];
         $result = $this->cards->search($filters['q'], $filters['source'], $filters['status'], $page);
-        return $this->render('@ForumifyIdCardPlugin/admin/list.html.twig', $result + ['page' => $page, 'filters' => $filters, 'statuses' => $statuses, 'photos' => $this->photos, 'commandNetAvailable' => $this->commandNet->isAvailable()]);
+        return $this->render('@MilsimIdCardPlugin/admin/list.html.twig', $result + ['page' => $page, 'filters' => $filters, 'statuses' => $statuses, 'photos' => $this->photos, 'commandNetAvailable' => $this->commandNet->isAvailable()]);
     }
 
     #[Route('/create', name: 'id_cards_create', methods: ['GET', 'POST'])]
@@ -107,21 +107,21 @@ class CardController extends AbstractController
                 } catch (\DomainException $e) { $form->addError(new FormError($e->getMessage())); }
             }
         }
-        return $this->render('@ForumifyIdCardPlugin/admin/editor.html.twig', ['form' => $form->createView(), 'card' => $card, 'data' => $this->renderer->data($card), 'milhqAvailable' => $this->milhq->isAvailable(), 'commandNetAvailable' => $this->commandNet->isAvailable() || $card->source === 'commandnet', 'years' => $this->settings->all()['years']]);
+        return $this->render('@MilsimIdCardPlugin/admin/editor.html.twig', ['form' => $form->createView(), 'card' => $card, 'data' => $this->renderer->data($card), 'milhqAvailable' => $this->milhq->isAvailable(), 'commandNetAvailable' => $this->commandNet->isAvailable() || $card->source === 'commandnet', 'years' => $this->settings->all()['years']]);
     }
 
     #[Route('/{id}', name: 'id_cards_view', requirements: ['id' => '\d+'], methods: ['GET'])]
     #[IsGranted('id-cards.admin.id_cards.view')]
     public function view(IdentificationCard $card): Response
     {
-        return $this->render('@ForumifyIdCardPlugin/admin/view.html.twig', ['card' => $card, 'data' => $this->renderer->data($card)]);
+        return $this->render('@MilsimIdCardPlugin/admin/view.html.twig', ['card' => $card, 'data' => $this->renderer->data($card)]);
     }
 
     #[Route('/{id}/download', name: 'id_cards_download', requirements: ['id' => '\d+'], methods: ['GET'])]
     #[IsGranted('id-cards.admin.id_cards.download')]
     public function download(IdentificationCard $card): Response
     {
-        return $this->render('@ForumifyIdCardPlugin/admin/download.html.twig', ['card' => $card, 'data' => $this->renderer->data($card)]);
+        return $this->render('@MilsimIdCardPlugin/admin/download.html.twig', ['card' => $card, 'data' => $this->renderer->data($card)]);
     }
 
     #[Route('/new-member-id', name: 'id_cards_new_id', methods: ['POST'])]

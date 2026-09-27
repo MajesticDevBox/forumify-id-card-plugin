@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
 final class ExpirationCalculator
 {

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Tests;
+namespace MajesticDev\MilsimIdCard\Tests;
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-use MajesticDev\ForumifyIdCard\Service\CardSettings;
+use MajesticDev\MilsimIdCard\Service\CardSettings;
 
 class TestKernel extends Kernel
 {
@@ -20,7 +20,7 @@ class TestKernel extends Kernel
         yield new \Symfony\Bundle\TwigBundle\TwigBundle();
         yield new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle();
         yield new \Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle();
-        yield new \MajesticDev\ForumifyIdCard\ForumifyIdCardPlugin();
+        yield new \MajesticDev\MilsimIdCard\MilsimIdCardPlugin();
     }
     public function getProjectDir(): string { return dirname(__DIR__); }
     public function getCacheDir(): string { return $this->getProjectDir().'/var/cache/'.$this->environment; }

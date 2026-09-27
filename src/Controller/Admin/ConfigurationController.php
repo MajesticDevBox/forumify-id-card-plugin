@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Controller\Admin;
+namespace MajesticDev\MilsimIdCard\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use MajesticDev\ForumifyIdCard\Entity\UnitMapping;
-use MajesticDev\ForumifyIdCard\Service\{CardSettings, PhotoStorage};
+use MajesticDev\MilsimIdCard\Entity\UnitMapping;
+use MajesticDev\MilsimIdCard\Service\{CardSettings, PhotoStorage};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\{TextType, IntegerType, CheckboxType, FileType};
 use Symfony\Component\Form\FormError;
@@ -41,7 +41,7 @@ class ConfigurationController extends AbstractController
                 return $this->redirectToRoute('id_cards_settings');
             } catch (\DomainException $e) { $form->addError(new FormError($e->getMessage())); }
         }
-        return $this->render('@ForumifyIdCardPlugin/admin/configuration.html.twig', ['title' => 'Card settings', 'form' => $form->createView(), 'mappings' => null]);
+        return $this->render('@MilsimIdCardPlugin/admin/configuration.html.twig', ['title' => 'Card settings', 'form' => $form->createView(), 'mappings' => null]);
     }
 
     #[Route('/admin/id-cards/unit-mapping', name: 'id_cards_mappings', methods: ['GET', 'POST'])]
@@ -61,7 +61,7 @@ class ConfigurationController extends AbstractController
                 catch (UniqueConstraintViolationException) { throw $this->createNotFoundException('Mapping changed concurrently. Reload this page.'); }
             }
         }
-        return $this->render('@ForumifyIdCardPlugin/admin/configuration.html.twig', ['title' => 'Unit mapping', 'form' => $form->createView(), 'mappings' => $em->getRepository(UnitMapping::class)->findBy([], ['milhqUnitName' => 'ASC'])]);
+        return $this->render('@MilsimIdCardPlugin/admin/configuration.html.twig', ['title' => 'Unit mapping', 'form' => $form->createView(), 'mappings' => $em->getRepository(UnitMapping::class)->findBy([], ['milhqUnitName' => 'ASC'])]);
     }
 
     #[Route('/admin/id-cards/unit-mapping/{id}/delete', name: 'id_cards_mapping_delete', methods: ['POST'])]

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Tests;
+namespace MajesticDev\MilsimIdCard\Tests;
 
-class TestSettings extends \MajesticDev\ForumifyIdCard\Service\CardSettings
+class TestSettings extends \MajesticDev\MilsimIdCard\Service\CardSettings
 {
     private array $data = self::DEFAULTS;
     public function __construct() {}

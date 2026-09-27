@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Tests;
+namespace MajesticDev\MilsimIdCard\Tests;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Doctrine\ORM\Tools\SchemaTool;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Service\PhotoStorage;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Service\PhotoStorage;
 
 class HttpTest extends WebTestCase
 {

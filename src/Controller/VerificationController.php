@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Controller;
+namespace MajesticDev\MilsimIdCard\Controller;
 
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\CardRenderer;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\CardRenderer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +34,7 @@ class VerificationController extends AbstractController
 
         $card = $cards->findOneBy(['qrToken' => $token]);
         if (!$card) { throw $this->createNotFoundException(); }
-        $response = $this->render('@ForumifyIdCardPlugin/frontend/verify.html.twig', ['data' => $renderer->data($card)]);
+        $response = $this->render('@MilsimIdCardPlugin/frontend/verify.html.twig', ['data' => $renderer->data($card)]);
         $response->headers->set('Cache-Control', 'no-store, private');
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         $response->headers->set('Referrer-Policy', 'no-referrer');

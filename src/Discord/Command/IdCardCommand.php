@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Discord\Command;
+namespace MajesticDev\MilsimIdCard\Discord\Command;
 
 use Forumify\Discord\Api\DTO\DiscordCommandOption;
 use Forumify\Discord\Api\DTO\DiscordCommandResult;
@@ -11,12 +11,12 @@ use Forumify\Discord\Api\Resource\DiscordCommandRun;
 use Forumify\Discord\Discord\DiscordCommandInterface;
 use Forumify\OAuth\Idp\DiscordIdp;
 use Forumify\OAuth\Repository\IdentityProviderUserRepository;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\CardStatusResolver;
-use MajesticDev\ForumifyIdCard\Service\CommandNetCardProvider;
-use MajesticDev\ForumifyIdCard\Service\MilhqCardProvider;
-use MajesticDev\ForumifyIdCard\Service\PhotoStorage;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\CardStatusResolver;
+use MajesticDev\MilsimIdCard\Service\CommandNetCardProvider;
+use MajesticDev\MilsimIdCard\Service\MilhqCardProvider;
+use MajesticDev\MilsimIdCard\Service\PhotoStorage;
 use Symfony\Component\HttpFoundation\UrlHelper;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 

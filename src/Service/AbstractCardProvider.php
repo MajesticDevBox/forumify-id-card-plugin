@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Forumify\Core\Entity\User;
-use MajesticDev\ForumifyIdCard\DTO\CardData;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\DTO\CardData;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
 
 /**
  * MilhqCardProvider and CommandNetCardProvider are two optional, mutually-exclusive

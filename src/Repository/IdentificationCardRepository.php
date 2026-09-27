@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Repository;
+namespace MajesticDev\MilsimIdCard\Repository;
 
 use Forumify\Core\Repository\AbstractRepository;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
 
 /**
  * Extends Forumify's AbstractRepository (rather than a plain ServiceEntityRepository)

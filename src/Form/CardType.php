@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Form;
+namespace MajesticDev\MilsimIdCard\Form;
 
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\{ChoiceType, TextType, DateType, CheckboxType, IntegerType, FileType, TextareaType};
@@ -14,10 +14,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 class CardType extends AbstractType
 {
     public function __construct(
-        private readonly \MajesticDev\ForumifyIdCard\Service\CardSettings $settings,
-        private readonly \MajesticDev\ForumifyIdCard\Service\ExpirationCalculator $expiration,
-        private readonly \MajesticDev\ForumifyIdCard\Service\MilhqCardProvider $milhq,
-        private readonly \MajesticDev\ForumifyIdCard\Service\CommandNetCardProvider $commandNet,
+        private readonly \MajesticDev\MilsimIdCard\Service\CardSettings $settings,
+        private readonly \MajesticDev\MilsimIdCard\Service\ExpirationCalculator $expiration,
+        private readonly \MajesticDev\MilsimIdCard\Service\MilhqCardProvider $milhq,
+        private readonly \MajesticDev\MilsimIdCard\Service\CommandNetCardProvider $commandNet,
     ) {}
 
     public function buildForm(FormBuilderInterface $builder, array $options): void

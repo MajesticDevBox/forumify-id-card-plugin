@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard;
+namespace MajesticDev\MilsimIdCard;
 
 use MajesticDev\Discord\CommandNetDiscordPlugin;
 use Forumify\Plugin\AbstractForumifyPlugin;
@@ -10,7 +10,7 @@ use Forumify\Plugin\PluginMetadata;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-class ForumifyIdCardPlugin extends AbstractForumifyPlugin
+class MilsimIdCardPlugin extends AbstractForumifyPlugin
 {
     public function getPluginMetadata(): PluginMetadata
     {
@@ -31,10 +31,10 @@ class ForumifyIdCardPlugin extends AbstractForumifyPlugin
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         parent::prependExtension($container, $builder);
-        $container->extension('doctrine', ['orm' => ['mappings' => ['ForumifyIdCardPlugin' => [
+        $container->extension('doctrine', ['orm' => ['mappings' => ['MilsimIdCardPlugin' => [
             'is_bundle' => false, 'type' => 'attribute', 'dir' => $this->getPath().'/src/Entity', 'prefix' => __NAMESPACE__.'\\Entity',
         ]]]]);
-        $container->extension('doctrine_migrations', ['migrations_paths' => ['MajesticDevIdCardMigrations' => $this->getPath().'/migrations']]);
+        $container->extension('doctrine_migrations', ['migrations_paths' => ['MajesticDevMilsimIdCardMigrations' => $this->getPath().'/migrations']]);
         // /id/{token} is public and unauthenticated (a QR code scan), so Forumify's own
         // SimpleRateLimiter doesn't apply here - it no-ops for anonymous users by design.
         // Effectively unlimited under test: the HTTP suite hits this route several times

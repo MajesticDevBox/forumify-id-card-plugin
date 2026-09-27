@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Command;
+namespace MajesticDev\MilsimIdCard\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\CommandNetCardProvider;
-use MajesticDev\ForumifyIdCard\Service\MilhqCardProvider;
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\CommandNetCardProvider;
+use MajesticDev\MilsimIdCard\Service\MilhqCardProvider;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

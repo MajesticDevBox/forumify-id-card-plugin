@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Service;
+namespace MajesticDev\MilsimIdCard\Service;
 
-use MajesticDev\ForumifyIdCard\DTO\CardData;
+use MajesticDev\MilsimIdCard\DTO\CardData;
 
 /**
  * A second, optional personnel source alongside MilhqCardProvider, for communities running

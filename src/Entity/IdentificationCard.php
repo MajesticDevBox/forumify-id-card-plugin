@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Entity;
+namespace MajesticDev\MilsimIdCard\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use MajesticDev\ForumifyIdCard\Repository\IdentificationCardRepository;
-use MajesticDev\ForumifyIdCard\Service\ExpirationCalculator;
+use MajesticDev\MilsimIdCard\Repository\IdentificationCardRepository;
+use MajesticDev\MilsimIdCard\Service\ExpirationCalculator;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: IdentificationCardRepository::class)]

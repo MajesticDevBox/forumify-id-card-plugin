@@ -10,5 +10,5 @@ return static function (ContainerConfigurator $container): void {
     $services
         ->autowire()
         ->autoconfigure()
-        ->load('MajesticDev\\ForumifyIdCard\\Discord\\', dirname(__DIR__) . '/src/Discord/');
+        ->load('MajesticDev\\MilsimIdCard\\Discord\\', dirname(__DIR__) . '/src/Discord/');
 };

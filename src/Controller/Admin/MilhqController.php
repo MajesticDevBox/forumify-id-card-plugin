@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MajesticDev\ForumifyIdCard\Controller\Admin;
+namespace MajesticDev\MilsimIdCard\Controller\Admin;
 
-use MajesticDev\ForumifyIdCard\Entity\IdentificationCard;
-use MajesticDev\ForumifyIdCard\Service\{MilhqCardProvider, PhotoStorage};
+use MajesticDev\MilsimIdCard\Entity\IdentificationCard;
+use MajesticDev\MilsimIdCard\Service\{MilhqCardProvider, PhotoStorage};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;

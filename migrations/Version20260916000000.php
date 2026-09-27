@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MajesticDevIdCardMigrations;
+namespace MajesticDevMilsimIdCardMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;

@@ -1,6 +1,6 @@
-# forumify-id-card-plugin
+# milsim-id-card-plugin
 
-A [Forumify](https://forumify.net) plugin (`majesticdev/forumify-id-card-plugin`) that
+A [Forumify](https://forumify.net) plugin (`majesticdev/milsim-id-card-plugin`) that
 issues **fictional MILSIM personnel ID cards** for Spearhead Gaming. Every card permanently
 displays `MILSIM / TRAINING · NOT A GOVERNMENT ID` — no rank, government seal, or real DoD
 identifier is ever used. See [README.md](README.md) for the full card-issuing/verification

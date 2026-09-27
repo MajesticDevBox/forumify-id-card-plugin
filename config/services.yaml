@@ -2,9 +2,9 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-    MajesticDev\ForumifyIdCard\:
+    MajesticDev\MilsimIdCard\:
         resource: '../src/'
-        exclude: ['../src/Entity/', '../src/Enum/', '../src/DTO/', '../src/ForumifyIdCardPlugin.php', '../src/Discord/']
-    MajesticDev\ForumifyIdCard\Service\PhotoStorage:
+        exclude: ['../src/Entity/', '../src/Enum/', '../src/DTO/', '../src/MilsimIdCardPlugin.php', '../src/Discord/']
+    MajesticDev\MilsimIdCard\Service\PhotoStorage:
         arguments:
             $projectDir: '%kernel.project_dir%'

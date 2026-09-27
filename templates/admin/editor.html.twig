@@ -1,4 +1,4 @@
-{% extends '@ForumifyIdCardPlugin/admin/base.html.twig' %}
+{% extends '@MilsimIdCardPlugin/admin/base.html.twig' %}
 {% block card_body %}
 <div class="id-editor" data-card-editor data-years="{{ years }}" data-id-url="{{ path('id_cards_new_id') }}" data-milhq-search-url="{{ path('id_cards_soldiers') }}" data-milhq-resolve-url="{{ path('id_cards_soldier', {id: 1}) }}"{% if commandNetAvailable %} data-commandnet-search-url="{{ path('id_cards_commandnet_search') }}" data-commandnet-resolve-url="{{ path('id_cards_commandnet_soldier', {id: 1}) }}"{% endif %} data-token="{{ csrf_token('id_card_editor') }}">
     <section class="id-panel"><div class="id-section-title"><span>01 / PERSONNEL</span><h2>{{ card.id ? 'Edit identification' : 'Create identification' }}</h2></div>
@@ -16,7 +16,7 @@
     <div class="id-actions"><button class="id-primary" type="submit">{{ card.id ? 'Save changes' : 'Issue card' }}</button><button type="reset">Reset</button></div>
     {{ form_end(form) }}</section>
     <aside class="id-preview"><div class="id-section-title"><span>02 / LIVE PREVIEW</span><h2>Your member card</h2></div>
-    {% include '@ForumifyIdCardPlugin/card.html.twig' %}
+    {% include '@MilsimIdCardPlugin/card.html.twig' %}
     <p class="id-muted">QR verification becomes available after saving. Download the issued card from its detail page.</p><p data-card-message role="status"></p></aside>
 </div>
 {% endblock %}
