@@ -73,17 +73,24 @@ class DomainTest extends TestCase
     {
         require_once dirname(__DIR__).'/migrations/Version20260914000000.php';
         require_once dirname(__DIR__).'/migrations/Version20260916000000.php';
+        require_once dirname(__DIR__).'/migrations/Version20260925000000.php';
         $config = ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__).'/src/Entity'], true);
         $config->setNamingStrategy(new UnderscoreNamingStrategy(CASE_LOWER));
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
         $em = new EntityManager($connection, $config);
         $schema = new \Doctrine\DBAL\Schema\Schema();
-        // Both migrations have to be applied to the same Schema before comparing against the
-        // entity mapping - a schema test that only runs the first migration would keep
-        // passing even if the Command Net columns drifted from the entity.
+        // Every migration has to be applied to the same Schema before comparing against the
+        // entity mapping - a schema test that skips a migration would keep passing even if
+        // its columns drifted from the entity.
         (new \MajesticDevIdCardMigrations\Version20260914000000($connection, new NullLogger()))->up($schema);
         (new \MajesticDevIdCardMigrations\Version20260916000000($connection, new NullLogger()))->up($schema);
+        $version20260925 = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        $version20260925->up($schema);
         foreach ($schema->toSql($connection->getDatabasePlatform()) as $sql) { $connection->executeStatement($sql); }
+        // The real migrations executor always calls postUp() with the schema up() just
+        // mutated - Version20260925000000 relies on it to tighten qualifications/awards to
+        // NOT NULL, so skipping it here would leave them nullable and hide schema drift.
+        $version20260925->postUp($schema);
         $metadata = [$em->getClassMetadata(IdentificationCard::class), $em->getClassMetadata(UnitMapping::class)];
         self::assertSame([], (new SchemaTool($em))->getUpdateSchemaSql($metadata));
         $card = new IdentificationCard(); $card->displayName='Majestic44';$card->memberId='006592';
@@ -100,6 +107,46 @@ class DomainTest extends TestCase
         $reloaded = $em->find(IdentificationCard::class, $cnCard->id);
         self::assertSame(42, $reloaded->commandNetSoldierId);
         self::assertTrue($reloaded->autoSyncCommandNet);
+    }
+
+    /**
+     * A schema test against an empty database (as above) can't catch an ADD COLUMN that
+     * would fail against a table that already has rows - which is exactly the case a
+     * migration runs against in the field. NOT NULL columns with no DEFAULT (json/boolean
+     * columns added after the table already exists) fail outright here unless the
+     * migration supplies one.
+     */
+    public function testNewColumnsMigrateOntoAnExistingRowWithSaneDefaults(): void
+    {
+        require_once dirname(__DIR__).'/migrations/Version20260925000000.php';
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $connection->executeStatement('CREATE TABLE majestic_id_card (id INTEGER PRIMARY KEY)');
+        $connection->executeStatement('INSERT INTO majestic_id_card (id) VALUES (1)');
+
+        $schemaManager = $connection->createSchemaManager();
+        $fromSchema = $schemaManager->introspectSchema();
+        $toSchema = clone $fromSchema;
+        $migration = new \MajesticDevIdCardMigrations\Version20260925000000($connection, new NullLogger());
+        $migration->up($toSchema);
+        $diff = $schemaManager->createComparator()->compareSchemas($fromSchema, $toSchema);
+        foreach ($connection->getDatabasePlatform()->getAlterSchemaSQL($diff) as $sql) {
+            $connection->executeStatement($sql);
+        }
+        // Mirrors the real executor: postUp() runs against the schema up() just mutated,
+        // after its ALTER statements have already been applied to the live connection.
+        $migration->postUp($toSchema);
+
+        $row = $connection->fetchAssociative('SELECT qualifications, awards, sync_qualifications, rank FROM majestic_id_card WHERE id = 1');
+        self::assertSame('[]', $row['qualifications']);
+        self::assertSame('[]', $row['awards']);
+        self::assertSame(1, $row['sync_qualifications']);
+        try {
+            $connection->executeStatement('INSERT INTO majestic_id_card (id) VALUES (2)');
+            self::fail('qualifications/awards should be NOT NULL after postUp() tightens them');
+        } catch (\Doctrine\DBAL\Exception $e) {
+            self::assertStringContainsString('NOT NULL', $e->getMessage());
+        }
+        self::assertNull($row['rank']);
     }
 
     public function testOptionalCommandNetAndTerminalStatusOnly(): void
@@ -126,6 +173,11 @@ class DomainTest extends TestCase
             public function getPrimaryAssignment(): object { return $this->assignment; }
             public function getUser(): object { return $this->user; }
             public function getStatus(): object { return $this->status; }
+            public function getRank(): ?object { return null; }
+            public function getSpecialty(): ?object { return null; }
+            public function getCallsign(): ?string { return null; }
+            public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+            public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
         };
 
         $settings = $this->createMock(CardSettings::class);
@@ -145,6 +197,8 @@ class DomainTest extends TestCase
         // should never populate a warning at all.
         self::assertNull($data->warning);
         self::assertNull($data->status);
+        self::assertSame([], $data->qualifications);
+        self::assertSame([], $data->awards);
     }
 
     public function testCommandNetDischargedIsTheOnlyTerminalStatus(): void
@@ -170,6 +224,11 @@ class DomainTest extends TestCase
                 public function getPrimaryAssignment(): object { return $this->assignment; }
                 public function getUser(): object { return $this->user; }
                 public function getStatus(): object { return $this->status; }
+                public function getRank(): ?object { return null; }
+                public function getSpecialty(): ?object { return null; }
+                public function getCallsign(): ?string { return null; }
+                public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+                public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
             };
             $provider = $this->getMockBuilder(CommandNetCardProvider::class)
                 ->setConstructorArgs([$this->createMock(ManagerRegistry::class), $settings])
@@ -178,6 +237,94 @@ class DomainTest extends TestCase
             $provider->method('getSoldier')->willReturn($soldier);
             self::assertSame($expected, $provider->resolveCardData(1)->status, "status for '$label'");
         }
+    }
+
+    public function testCommandNetMapsRankSpecialtyCallsignQualificationsAndAwards(): void
+    {
+        $unit = new class { public function getName(): string { return 'HQ'; } };
+        $assignment = new class($unit) {
+            public function __construct(private object $unit) {}
+            public function getUnit(): object { return $this->unit; }
+        };
+        $user = new class {
+            public function getDisplayName(): string { return 'Member'; }
+            public function getAvatar(): ?string { return null; }
+        };
+        $status = new class { public string $value = 'active'; };
+        $rank = new class { public function getName(): string { return 'Sergeant'; } };
+        $specialty = new class { public function getName(): string { return 'Rifleman'; } };
+        $tier = new class { public string $value = 'advanced'; };
+        $qualification = new class($tier) {
+            public function __construct(private object $tier) {}
+            public function getName(): string { return 'Combat Medic'; }
+            public function getTier(): ?object { return $this->tier; }
+        };
+        $soldierQualification = new class($qualification) {
+            public function __construct(private object $qualification) {}
+            public function getQualification(): object { return $this->qualification; }
+        };
+        $award = new class { public function getName(): string { return 'Medal of Honor'; } };
+        $soldierAward = new class($award) {
+            public function __construct(private object $award) {}
+            public function getAward(): object { return $this->award; }
+        };
+        $soldier = new class($assignment, $user, $status, $rank, $specialty, $soldierQualification, $soldierAward) {
+            public function __construct(
+                private object $assignment, private object $user, private object $status,
+                private object $rank, private object $specialty,
+                private object $soldierQualification, private object $soldierAward,
+            ) {}
+            public function getPrimaryAssignment(): object { return $this->assignment; }
+            public function getUser(): object { return $this->user; }
+            public function getStatus(): object { return $this->status; }
+            public function getRank(): object { return $this->rank; }
+            public function getSpecialty(): object { return $this->specialty; }
+            public function getCallsign(): string { return 'Reaper'; }
+            public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection([$this->soldierQualification]); }
+            public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection([$this->soldierAward]); }
+        };
+
+        $settings = $this->createMock(CardSettings::class);
+        $settings->method('all')->willReturn(CardSettings::DEFAULTS);
+        $provider = $this->getMockBuilder(CommandNetCardProvider::class)
+            ->setConstructorArgs([$this->createMock(ManagerRegistry::class), $settings])
+            ->onlyMethods(['getSoldier'])
+            ->getMock();
+        $provider->method('getSoldier')->willReturn($soldier);
+
+        $data = $provider->resolveCardData(1);
+        self::assertSame('Sergeant', $data->rank);
+        self::assertSame('Rifleman', $data->specialty);
+        self::assertSame('Reaper', $data->callsign);
+        self::assertSame([['name' => 'Combat Medic', 'tier' => 'advanced']], $data->qualifications);
+        self::assertSame([['name' => 'Medal of Honor']], $data->awards);
+    }
+
+    public function testSyncQualificationsFlagGatesTheNewFields(): void
+    {
+        $card = new IdentificationCard();
+        $card->source = 'commandnet';
+        $card->commandNetSoldierId = 7;
+
+        $provider = $this->getMockBuilder(CommandNetCardProvider::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['resolveCardData'])
+            ->getMock();
+        $provider->method('resolveCardData')->willReturn(
+            new \MajesticDev\ForumifyIdCard\DTO\CardData('Name', ['A', 'B', 'C'], null, 'default', null, rank: 'Sergeant', callsign: 'Reaper', qualifications: [['name' => 'Combat Medic', 'tier' => null]]),
+        );
+
+        $card->syncQualifications = false;
+        $provider->syncCard($card);
+        self::assertNull($card->rank);
+        self::assertNull($card->callsign);
+        self::assertSame([], $card->qualifications);
+
+        $card->syncQualifications = true;
+        $provider->syncCard($card);
+        self::assertSame('Sergeant', $card->rank);
+        self::assertSame('Reaper', $card->callsign);
+        self::assertSame([['name' => 'Combat Medic', 'tier' => null]], $card->qualifications);
     }
 
     public function testCommandNetSyncPreservesOwnedFieldsAndCustomPhoto(): void

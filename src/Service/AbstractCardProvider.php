@@ -67,6 +67,10 @@ abstract class AbstractCardProvider
         if ($card->syncOrganization) { [$card->organizationLine1, $card->organizationLine2, $card->organizationLine3] = $data->organization; }
         if ($card->syncPhoto && $card->photoSource !== 'custom') { $card->photo = $data->photo; $card->photoSource = $data->photoSource; }
         if ($card->syncStatus && $data->status === 'revoked') { $card->revoke($meta['revokeMessage']); }
+        if ($card->syncQualifications) {
+            $card->rank = $data->rank; $card->specialty = $data->specialty; $card->callsign = $data->callsign;
+            $card->qualifications = $data->qualifications; $card->awards = $data->awards;
+        }
         $card->updatedAt = new \DateTimeImmutable();
         return $data->warning;
     }

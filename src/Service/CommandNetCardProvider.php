@@ -60,6 +60,18 @@ class CommandNetCardProvider extends AbstractCardProvider
         // Only a discharge ends personnel status outright; leave/AWOL/retired are not
         // treated as terminal here, unlike MILHQ's free-form status labels.
         $status = $soldier->getStatus()->value === 'discharged' ? 'revoked' : null;
-        return new CardData($soldier->getUser()->getDisplayName(), $organization, $photo, $source, $status);
+        $qualifications = array_map(
+            static fn ($sq) => ['name' => $sq->getQualification()->getName(), 'tier' => $sq->getQualification()->getTier()?->value],
+            $soldier->getQualifications()->toArray(),
+        );
+        $awards = array_map(static fn ($sa) => ['name' => $sa->getAward()->getName()], $soldier->getAwards()->toArray());
+        return new CardData(
+            $soldier->getUser()->getDisplayName(), $organization, $photo, $source, $status,
+            rank: $soldier->getRank()?->getName(),
+            specialty: $soldier->getSpecialty()?->getName(),
+            callsign: $soldier->getCallsign(),
+            qualifications: $qualifications,
+            awards: $awards,
+        );
     }
 }

@@ -10,8 +10,9 @@
     <div class="id-member">{{ form_row(form.memberId) }}<button type="button" data-regenerate>Regenerate</button></div>
     {% if card.id %}{{ form_row(form.confirmMemberIdChange) }}{% else %}{% do form.confirmMemberIdChange.setRendered %}{% endif %}
     {{ form_row(form.organizationLine1) }}{{ form_row(form.organizationLine2) }}{{ form_row(form.organizationLine3) }}
+    {{ form_row(form.rank) }}{{ form_row(form.specialty) }}{{ form_row(form.callsign) }}
     <details open><summary>Portrait & dates</summary>{{ form_row(form.photoPreference) }}{{ form_row(form.upload) }}<p class="id-muted">JPEG, PNG or WebP · up to 5 MB · centered crop</p>{{ form_row(form.issueDate) }}{{ form_row(form.expirationOverride) }}{{ form_row(form.expirationDate) }}</details>
-    <details><summary>Synchronization & private notes</summary>{{ form_row(form.autoSyncMilhq) }}{% if commandNetAvailable %}{{ form_row(form.autoSyncCommandNet) }}{% endif %}{{ form_row(form.syncName) }}{{ form_row(form.syncOrganization) }}{{ form_row(form.syncPhoto) }}{{ form_row(form.syncStatus) }}{{ form_row(form.notes) }}</details>
+    <details><summary>Synchronization & private notes</summary>{{ form_row(form.autoSyncMilhq) }}{% if commandNetAvailable %}{{ form_row(form.autoSyncCommandNet) }}{% endif %}{{ form_row(form.syncName) }}{{ form_row(form.syncOrganization) }}{{ form_row(form.syncPhoto) }}{{ form_row(form.syncStatus) }}{{ form_row(form.syncQualifications) }}{{ form_row(form.notes) }}</details>
     <div class="id-actions"><button class="id-primary" type="submit">{{ card.id ? 'Save changes' : 'Issue card' }}</button><button type="reset">Reset</button></div>
     {{ form_end(form) }}</section>
     <aside class="id-preview"><div class="id-section-title"><span>02 / LIVE PREVIEW</span><h2>Your member card</h2></div>
