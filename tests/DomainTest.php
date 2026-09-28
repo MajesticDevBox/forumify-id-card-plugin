@@ -156,12 +156,13 @@ class DomainTest extends TestCase
         self::assertSame([], $provider->searchSoldiers('test'));
     }
 
-    public function testCommandNetFallsBackToUnitNameWithNoMappingTableAndNeverWarns(): void
+    public function testCommandNetUsesTheUnitChainAndFallsBackToDefaultSquadLine(): void
     {
-        $unit = new class { public function getName(): string { return 'Misfit - 1 C'; } };
+        $unit = new class { public function getName(): string { return 'Misfit - 1 C'; } public function getParent(): ?object { return null; } };
         $assignment = new class($unit) {
             public function __construct(private object $unit) {}
             public function getUnit(): object { return $this->unit; }
+            public function getSquad(): ?object { return null; }
         };
         $user = new class {
             public function getDisplayName(): string { return 'Member'; }
@@ -190,7 +191,7 @@ class DomainTest extends TestCase
 
         $data = $provider->resolveCardData(1);
         self::assertSame(
-            [CardSettings::DEFAULTS['organizationLine1'], CardSettings::DEFAULTS['organizationLine2'], 'Misfit - 1 C'],
+            [CardSettings::DEFAULTS['organizationLine1'], 'Misfit - 1 C', CardSettings::DEFAULTS['organizationLine3']],
             $data->organization,
         );
         // Unlike MILHQ, Command Net has no unit-mapping table to warn about missing - it
@@ -201,12 +202,59 @@ class DomainTest extends TestCase
         self::assertSame([], $data->awards);
     }
 
+    public function testCommandNetBuildsOrganizationFromUnitAncestryAutomatically(): void
+    {
+        $brigade = new class { public function getName(): string { return '1st Air Cavalry Brigade'; } public function getParent(): ?object { return null; } };
+        $detachment = new class($brigade) {
+            public function __construct(private object $parent) {}
+            public function getName(): string { return 'Detachment 7'; }
+            public function getParent(): ?object { return $this->parent; }
+        };
+        $squad = new class { public function getName(): string { return '1st Squad'; } };
+        $assignment = new class($detachment, $squad) {
+            public function __construct(private object $unit, private object $squad) {}
+            public function getUnit(): object { return $this->unit; }
+            public function getSquad(): ?object { return $this->squad; }
+        };
+        $user = new class {
+            public function getDisplayName(): string { return 'Member'; }
+            public function getAvatar(): ?string { return null; }
+        };
+        $status = new class { public string $value = 'active'; };
+        $soldier = new class($assignment, $user, $status) {
+            public function __construct(private object $assignment, private object $user, private object $status) {}
+            public function getPrimaryAssignment(): object { return $this->assignment; }
+            public function getUser(): object { return $this->user; }
+            public function getStatus(): object { return $this->status; }
+            public function getRank(): ?object { return null; }
+            public function getSpecialty(): ?object { return null; }
+            public function getCallsign(): ?string { return null; }
+            public function getQualifications(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+            public function getAwards(): \Doctrine\Common\Collections\Collection { return new \Doctrine\Common\Collections\ArrayCollection(); }
+        };
+
+        $settings = $this->createMock(CardSettings::class);
+        $settings->method('all')->willReturn(CardSettings::DEFAULTS);
+        $provider = $this->getMockBuilder(CommandNetCardProvider::class)
+            ->setConstructorArgs([$this->createMock(ManagerRegistry::class), $settings])
+            ->onlyMethods(['getSoldier'])
+            ->getMock();
+        $provider->method('getSoldier')->willReturn($soldier);
+
+        $data = $provider->resolveCardData(1);
+        self::assertSame(
+            [CardSettings::DEFAULTS['organizationLine1'], '1st Air Cavalry Brigade, Detachment 7', '1st Squad'],
+            $data->organization,
+        );
+    }
+
     public function testCommandNetDischargedIsTheOnlyTerminalStatus(): void
     {
-        $unit = new class { public function getName(): string { return 'HQ'; } };
+        $unit = new class { public function getName(): string { return 'HQ'; } public function getParent(): ?object { return null; } };
         $assignment = new class($unit) {
             public function __construct(private object $unit) {}
             public function getUnit(): object { return $this->unit; }
+            public function getSquad(): ?object { return null; }
         };
         $user = new class {
             public function getDisplayName(): string { return 'Member'; }
@@ -241,10 +289,11 @@ class DomainTest extends TestCase
 
     public function testCommandNetMapsRankSpecialtyCallsignQualificationsAndAwards(): void
     {
-        $unit = new class { public function getName(): string { return 'HQ'; } };
+        $unit = new class { public function getName(): string { return 'HQ'; } public function getParent(): ?object { return null; } };
         $assignment = new class($unit) {
             public function __construct(private object $unit) {}
             public function getUnit(): object { return $this->unit; }
+            public function getSquad(): ?object { return null; }
         };
         $user = new class {
             public function getDisplayName(): string { return 'Member'; }

@@ -23,8 +23,13 @@ class ConfigurationController extends AbstractController
     public function settings(Request $request, CardSettings $settings, PhotoStorage $photos): Response
     {
         $builder = $this->createFormBuilder($settings->all());
+        $orgLabels = [
+            'organizationLine1' => ['label' => 'Community name', 'help' => 'e.g. "Spearhead Gaming". Shown on every card.'],
+            'organizationLine2' => ['label' => 'Default unit', 'help' => 'Fallback unit line for manual cards, or any Command Net soldier with no unit assigned.'],
+            'organizationLine3' => ['label' => 'Default squad / team', 'help' => 'Fallback squad/team line for manual cards, or any Command Net soldier with no unit assigned.'],
+        ];
         foreach (['organizationLine1', 'organizationLine2', 'organizationLine3', 'header', 'subtitle', 'disclaimer'] as $field) {
-            $builder->add($field, TextType::class, ['constraints' => [new Assert\NotBlank(), new Assert\Length(max: 100)]]);
+            $builder->add($field, TextType::class, ($orgLabels[$field] ?? []) + ['constraints' => [new Assert\NotBlank(), new Assert\Length(max: 100)]]);
         }
         $builder->add('years', IntegerType::class, ['label' => 'Default expiration years', 'constraints' => [new Assert\Range(min: 1, max: 20)]])
             ->add('baseUrl', TextType::class, ['required' => false, 'empty_data' => '', 'label' => 'Canonical verification origin', 'help' => 'Optional https://forum.example.com origin, without a path. Blank uses the current Forumify host.', 'constraints' => [new Assert\Regex(pattern: '~^$|^https://[a-zA-Z0-9.-]+(?::[0-9]{1,5})?$~D')]])

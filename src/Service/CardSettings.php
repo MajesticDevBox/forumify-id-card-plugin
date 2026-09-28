@@ -9,7 +9,7 @@ use Forumify\Core\Repository\SettingRepository;
 class CardSettings
 {
     public const DEFAULTS = [
-        'organizationLine1' => '2nd Ranger Battalion', 'organizationLine2' => 'Misfit Company', 'organizationLine3' => 'Misfit - 1 C',
+        'organizationLine1' => 'Spearhead Gaming', 'organizationLine2' => 'Misfit Company', 'organizationLine3' => 'Misfit - 1 C',
         'years' => 5, 'header' => 'SPEARHEAD GAMING', 'subtitle' => 'MILSIM IDENTIFICATION CARD',
         'disclaimer' => 'NOT A GOVERNMENT ID', 'baseUrl' => '', 'logo' => null,
     ];

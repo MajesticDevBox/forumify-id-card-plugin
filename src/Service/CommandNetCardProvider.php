@@ -46,11 +46,8 @@ class CommandNetCardProvider extends AbstractCardProvider
             throw new \DomainException('Command Net record unavailable. Existing card data has been preserved.');
         }
         $defaults = $this->settings->all();
-        $unit = $soldier->getPrimaryAssignment()?->getUnit();
-        // No dedicated unit-mapping table for this source (unlike MILHQ): the unit's own
-        // name is already a readable organization line, so the community default lines
-        // plus that name are used directly.
-        $organization = [$defaults['organizationLine1'], $defaults['organizationLine2'], $unit?->getName() ?? $defaults['organizationLine3']];
+        $assignment = $soldier->getPrimaryAssignment();
+        $organization = $this->buildOrganization($assignment?->getUnit(), $assignment?->getSquad(), $defaults);
         $photo = null;
         $source = 'default';
         if ($preference !== 'default' && $soldier->getUser()->getAvatar()) {
@@ -73,5 +70,32 @@ class CommandNetCardProvider extends AbstractCardProvider
             qualifications: $qualifications,
             awards: $awards,
         );
+    }
+
+    /**
+     * Auto-populates the three organization lines from the soldier's own unit/squad
+     * assignment instead of requiring a mapping to be entered per unit (unlike MILHQ's
+     * UnitMapping table): line 1 is the community-wide default (set once in Configuration),
+     * line 2 is the assigned unit's own chain root-to-self (e.g. "3rd Infantry Division, 75th
+     * Ranger Regiment, 1st Air Cavalry Brigade, Detachment 7"), and line 3 is the soldier's
+     * squad/team within that unit, if one is set - squads/teams aren't Units themselves (see
+     * commandnet-plugin's Squad entity), so this reads Assignment::getSquad() rather than
+     * walking the unit tree any further.
+     *
+     * @param array<string, mixed> $defaults
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function buildOrganization(?object $unit, ?object $squad, array $defaults): array
+    {
+        if ($unit === null) {
+            return [$defaults['organizationLine1'], $defaults['organizationLine2'], $defaults['organizationLine3']];
+        }
+        $chain = [$unit->getName()];
+        for ($ancestor = $unit->getParent(); $ancestor !== null; $ancestor = $ancestor->getParent()) {
+            $chain[] = $ancestor->getName();
+        }
+        $line2 = implode(', ', array_reverse($chain));
+        $line3 = $squad?->getName() ?? $defaults['organizationLine3'];
+        return [$defaults['organizationLine1'], $line2, $line3];
     }
 }
