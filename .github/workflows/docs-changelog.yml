@@ -22,6 +22,10 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Serialise runs: they all push to the same docs branch.
+    concurrency:
+      group: docs-changelog
+      cancel-in-progress: false
     permissions:
       contents: read
     steps:
@@ -51,11 +55,17 @@ jobs:
       - name: Build the changelog page
         if: steps.gate.outputs.enabled == 'true'
         run: |
+          # Fail loudly rather than publish a mangled page.
+          if [ "$(head -n 1 CHANGELOG.md)" != "# Changelog" ]; then
+            echo "::error::CHANGELOG.md must start with '# Changelog'"
+            exit 1
+          fi
           mkdir -p "docs-repo/$(dirname "$DOCS_PATH")"
           {
             echo "# $PAGE_TITLE"
-            # Drop CHANGELOG.md's own "# Changelog" title line.
-            tail -n +2 CHANGELOG.md
+            # Drop the "# Changelog" title, and the "## Unreleased" section so
+            # unreleased work is never published before its release exists.
+            tail -n +2 CHANGELOG.md | awk '/^## /{skip = ($0 ~ /^## Unreleased/)} !skip'
           } > "docs-repo/$DOCS_PATH"
 
       - name: Open a pull request on the docs repo
