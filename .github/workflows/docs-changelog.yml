@@ -15,8 +15,8 @@ on:
 env:
   DOCS_REPO: Spearhead-Gaming/dev-docs
   DOCS_BRANCH: main
-  # The synced folder for the Changelog space, and this component's page in it.
-  DOCS_PATH: changelog/milsim-id-card.md
+  # The Changelog space's Git Sync folder in the docs repo, and this component's page in it.
+  DOCS_PATH: documentation/changelog/milsim-id-card.md
   PAGE_TITLE: Milsim ID Card
 
 jobs:
