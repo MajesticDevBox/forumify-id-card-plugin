@@ -1,0 +1,83 @@
+name: Sync changelog to docs
+
+# When a release is published, copy CHANGELOG.md into the docs repo as this
+# component's Changelog page and open a pull request there. GitBook Git Sync
+# publishes it once that pull request is merged.
+#
+# Setup: add a repository secret DOCS_REPO_TOKEN, a token that can push branches
+# and open pull requests on the docs repo. Without it this workflow does nothing.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  DOCS_REPO: Spearhead-Gaming/dev-docs
+  DOCS_BRANCH: main
+  # The synced folder for the Changelog space, and this component's page in it.
+  DOCS_PATH: changelog/milsim-id-card.md
+  PAGE_TITLE: Milsim ID Card
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # Serialise runs: they all push to the same docs branch.
+    concurrency:
+      group: docs-changelog
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - name: Check for docs token
+        id: gate
+        env:
+          TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "DOCS_REPO_TOKEN is not set; skipping."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          repository: ${{ env.DOCS_REPO }}
+          ref: ${{ env.DOCS_BRANCH }}
+          token: ${{ secrets.DOCS_REPO_TOKEN }}
+          path: docs-repo
+
+      - name: Build the changelog page
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          # Fail loudly rather than publish a mangled page.
+          if [ "$(head -n 1 CHANGELOG.md)" != "# Changelog" ]; then
+            echo "::error::CHANGELOG.md must start with '# Changelog'"
+            exit 1
+          fi
+          mkdir -p "docs-repo/$(dirname "$DOCS_PATH")"
+          {
+            echo "# $PAGE_TITLE"
+            # Drop the "# Changelog" title, and the "## Unreleased" section so
+            # unreleased work is never published before its release exists.
+            tail -n +2 CHANGELOG.md | awk '/^## /{skip = ($0 ~ /^## Unreleased/)} !skip'
+          } > "docs-repo/$DOCS_PATH"
+
+      - name: Open a pull request on the docs repo
+        if: steps.gate.outputs.enabled == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          path: docs-repo
+          token: ${{ secrets.DOCS_REPO_TOKEN }}
+          branch: changelog/milsim-id-card
+          base: ${{ env.DOCS_BRANCH }}
+          commit-message: "docs: update ${{ env.PAGE_TITLE }} changelog"
+          title: "Update ${{ env.PAGE_TITLE }} changelog"
+          body: |
+            Automated update of the ${{ env.PAGE_TITLE }} changelog from
+            ${{ github.repository }} (${{ github.event_name == 'release' && github.event.release.tag_name || 'manual run' }}).
